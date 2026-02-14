@@ -13,10 +13,51 @@ from django.http import JsonResponse, HttpResponse
 from django.db.models import Sum, Max
 from django.db import transaction
 import os
+import base64
 import csv
 import io
 from django.conf import settings
 from django.utils.text import slugify
+from pathlib import Path as PathLib
+
+
+def _producto_imagen_a_data_url(producto, request):
+    """Resuelve la imagen del producto a una data URL (base64) o URL absoluta.
+    Las imágenes se guardan en BASE_DIR/imagenes/ con ruta 'imagenes/xxx.jpg'."""
+    if not producto.imagen:
+        return None
+    rel = getattr(producto.imagen, 'name', None) or str(producto.imagen)
+    if not rel or not rel.strip():
+        return None
+    rel = rel.replace('\\', '/').strip().lstrip('/')
+    base_dir = PathLib(settings.BASE_DIR)
+    media_root = PathLib(settings.MEDIA_ROOT) if getattr(settings, 'MEDIA_ROOT', None) else None
+    candidatos = [
+        base_dir / rel,
+        base_dir / 'imagenes' / PathLib(rel).name,
+        base_dir / 'imagenes' / rel,
+    ]
+    if media_root:
+        candidatos.append(media_root / rel)
+    if getattr(producto.imagen, 'path', None):
+        try:
+            candidatos.insert(0, PathLib(producto.imagen.path))
+        except Exception:
+            pass
+    for path in candidatos:
+        try:
+            if path.is_file():
+                data = path.read_bytes()
+                b64 = base64.b64encode(data).decode('ascii')
+                ext = path.suffix.lower()
+                mime = 'image/jpeg' if ext in ('.jpg', '.jpeg') else 'image/png' if ext == '.png' else 'image/gif' if ext == '.gif' else 'image/webp' if ext == '.webp' else 'image/png'
+                return f'data:{mime};base64,{b64}'
+        except Exception:
+            continue
+    try:
+        return request.build_absolute_uri('/' + rel)
+    except Exception:
+        return None
 
 
 def get_next_numero(model_class, prefix):
@@ -1623,10 +1664,13 @@ def orden_fabricante_view(request, produccion_id):
                 }
             resumen_insumos[key]['cantidad_total'] += cant_total
 
+        imagen_data_url = _producto_imagen_a_data_url(producto, request)
         lineas_detalle.append({
             'linea': linea,
             'producto': producto,
             'insumos': detalle_insumos,
+            'imagen_url_absolute': imagen_data_url,
+            'imagen_data_url': imagen_data_url,
         })
 
     return render(request, 'orden_fabricante.html', {

@@ -55,8 +55,10 @@
     <div class="bloque-producto">
         <h2>{{ item.producto.nombre }} — {{ item.producto.referencia }}</h2>
         <div class="producto-cabecera">
-            {% if item.producto.imagen %}
-            <img src="{{ item.producto.imagen.url }}" alt="{{ item.producto.nombre }}" class="producto-img">
+            {% if item.imagen_url_absolute %}
+            <img src="{{ item.imagen_url_absolute|safe }}" alt="{{ item.producto.nombre }}" class="producto-img">
+            {% elif item.producto.imagen %}
+            <img src="/{{ item.producto.imagen }}" alt="{{ item.producto.nombre }}" class="producto-img">
             {% else %}
             <div class="producto-img" style="display: flex; align-items: center; justify-content: center; color: #999; font-size: 12px;">Sin imagen</div>
             {% endif %}
