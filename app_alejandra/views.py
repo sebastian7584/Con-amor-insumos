@@ -21,15 +21,19 @@ from django.utils.text import slugify
 
 def get_next_numero(model_class, prefix):
     """Genera el siguiente número con prefijo (ej: FA-0001, PR-0002, CO-0003)."""
-    last = model_class.objects.filter(numero__startswith=prefix).order_by('-numero').first()
-    if last and last.numero:
-        try:
-            n = int(last.numero.split('-')[-1]) + 1
-        except (ValueError, IndexError):
+    try:
+        last = model_class.objects.filter(numero__startswith=prefix).exclude(numero__isnull=True).exclude(numero='').order_by('-numero').first()
+        if last and getattr(last, 'numero', None):
+            num_str = (last.numero or '').strip()
+            if num_str and '-' in num_str:
+                n = int(num_str.split('-')[-1]) + 1
+            else:
+                n = 1
+        else:
             n = 1
-    else:
-        n = 1
-    return f"{prefix}{n:04d}"
+        return f"{prefix}{n:04d}"
+    except Exception:
+        return f"{prefix}0001"
 
 
 def login_view(request):
@@ -1115,6 +1119,12 @@ def produccion_view(request):
                 messages.error(request, "Error: número de orden duplicado. Intente de nuevo.")
             else:
                 messages.error(request, f"Error de base de datos al crear la orden: {str(e)}")
+            return redirect('produccion')
+        except TypeError as e:
+            if 'numero' in str(e):
+                messages.error(request, "Error: falta el campo 'numero' en producción. Ejecute en el servidor: python manage.py migrate")
+            else:
+                messages.error(request, f"Error al crear la orden: {str(e)}")
             return redirect('produccion')
         except Exception as e:
             messages.error(request, f"Error al crear la orden: {type(e).__name__}: {str(e)}")
