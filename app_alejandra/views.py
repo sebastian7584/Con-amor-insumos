@@ -1088,10 +1088,7 @@ def produccion_view(request):
                     if not color:
                         color = producto.colores.first()
                     if not color:
-                        raise ValueError(
-                            f"El producto '{producto.nombre}' (ref. {producto.referencia}) no tiene colores asignados. "
-                            "Asigne al menos un color al producto en Productos."
-                        )
+                        color, _ = Color.objects.get_or_create(nombre='Sin color', defaults={'nombre': 'Sin color'})
                     LineaProduccion.objects.create(
                         produccion=nueva_produccion,
                         producto=producto,

@@ -151,6 +151,7 @@
         <div class="form-group">
             <button type="submit" id="guardar-btn" disabled>Guardar Producción</button>
         </div>
+        <p style="font-size: 12px; color: #666;">Agregue al menos un producto con cantidad y haga clic en Guardar. Opcional: use «Calcular Insumos» para ver insumos requeridos.</p>
     </form>
 </div>
 
@@ -177,6 +178,17 @@
             </td>`;
 
         table.appendChild(row);
+        actualizarBotonGuardar();
+    }
+
+    function actualizarBotonGuardar() {
+        const filas = document.querySelectorAll("#produccion-table tbody tr");
+        const completas = [...filas].filter(tr => {
+            const prod = tr.querySelector("select[name='producto_id[]']");
+            const cant = tr.querySelector("input[name='cantidad[]']");
+            return prod && prod.value && cant && cant.value && parseInt(cant.value) > 0;
+        });
+        document.getElementById("guardar-btn").disabled = completas.length === 0;
     }
 
     function actualizarColores(select) {
@@ -234,6 +246,9 @@
         })
         .catch(error => console.error('Error en la validación:', error));
     }
+
+    document.getElementById("produccion-table").addEventListener("input", actualizarBotonGuardar);
+    document.getElementById("produccion-table").addEventListener("change", actualizarBotonGuardar);
 </script>
 
 {% endblock %}
