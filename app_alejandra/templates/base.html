@@ -27,12 +27,17 @@
             top: 0;
             box-sizing: border-box;
         }
-        .navbar img {
-            height: 50px;
-        }
         .navbar .logo-center {
             flex: 1;
             text-align: center;
+            font-size: 1.25rem;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+        }
+        .navbar #menu-button svg {
+            display: block;
+            width: 28px;
+            height: 28px;
         }
         .navbar .btn-logout {
             background-color: white;
@@ -100,14 +105,16 @@
 <body>
     <!-- Barra superior -->
     <div class="navbar">
-        <!-- Botón menú lateral -->
-        <button id="menu-button" style="border: none; background: none; padding: 0; cursor: pointer;">
-            <img src="{% static 'images/menu_icon.png' %}" alt="menu">
+        <!-- Botón menú lateral (SVG hamburguesa) -->
+        <button id="menu-button" type="button" style="border: none; background: none; padding: 8px; cursor: pointer; color: white;" aria-label="Abrir menú">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z"/>
+            </svg>
         </button>
 
-        <!-- Logo central -->
+        <!-- Marca central -->
         <div class="logo-center">
-            <img src="{% static 'images/logo.png' %}" alt="logo">
+            Con Amor Insumos
         </div>
 
         <!-- Botón de salir -->
