@@ -1047,13 +1047,14 @@ def produccion_view(request):
         try:
             with transaction.atomic():
                 manualista = Manualista.objects.get(id=manualista_id)
+                numero = get_next_numero(Produccion, 'PR-')
                 nueva_produccion = Produccion.objects.create(
                     manualista=manualista,
                     fecha_inicio=fecha_inicio,
                     fecha_tentativa=fecha_tentativa,
                     estado="Pendiente",
                     valor_a_pagar=valor_decimal if valor_decimal > 0 else None,
-                    numero=get_next_numero(Produccion, 'PR-')
+                    numero=numero,
                 )
 
                 ins2 = calcular_produccion_interno(productos_ids, cantidades)
@@ -1083,7 +1084,10 @@ def produccion_view(request):
                     if not color:
                         color = producto.colores.first()
                     if not color:
-                        raise ValueError(f"El producto '{producto.nombre}' no tiene colores asignados.")
+                        raise ValueError(
+                            f"El producto '{producto.nombre}' (ref. {producto.referencia}) no tiene colores asignados. "
+                            "Asigne al menos un color al producto en Productos."
+                        )
                     LineaProduccion.objects.create(
                         produccion=nueva_produccion,
                         producto=producto,
@@ -1100,14 +1104,20 @@ def produccion_view(request):
 
             messages.success(request, f"Orden de producción {nueva_produccion.numero} creada exitosamente con insumos reservados.")
             return redirect('produccion')
-        except (Manualista.DoesNotExist, Producto.DoesNotExist) as e:
+        except (Manualista.DoesNotExist, Producto.DoesNotExist):
             messages.error(request, "Manualista o producto no encontrado.")
             return redirect('produccion')
         except ValueError as e:
             messages.error(request, str(e))
             return redirect('produccion')
+        except IntegrityError as e:
+            if 'numero' in str(e).lower() or 'unique' in str(e).lower():
+                messages.error(request, "Error: número de orden duplicado. Intente de nuevo.")
+            else:
+                messages.error(request, f"Error de base de datos al crear la orden: {str(e)}")
+            return redirect('produccion')
         except Exception as e:
-            messages.error(request, f"Error al crear la orden: {str(e)}")
+            messages.error(request, f"Error al crear la orden: {type(e).__name__}: {str(e)}")
             return redirect('produccion')
 
     manualistas = Manualista.objects.all()
@@ -1228,45 +1238,33 @@ def calcular_produccion_interno(productos_ids, cantidades):
         insumos = ProductoInsumo.objects.filter(producto=producto)
 
         for insumo in insumos:
-            insumo_color_valido = True
-            # colores_insumo = insumo.insumo.colores.all()
+            # ProductoInsumo puede tener color null: usar primer color del insumo o omitir
+            if insumo.color_id is not None:
+                color_id = insumo.color.id
+            else:
+                first_color = insumo.insumo.colores.first()
+                if first_color is None:
+                    continue
+                color_id = first_color.id
 
-            # Si el insumo tiene "SinColor", se permite cualquier color
-            # if colores_insumo.filter(nombre="SinColor").exists():
-            #     insumo_color_valido = True
-            # elif colores_insumo.filter(id=color.id).exists():
-            #     insumo_color_valido = True
-            # else:
-            #     errores.append(f"El insumo '{insumo.insumo.nombre}' no tiene el color '{color.nombre}'.")
+            insumo_total = cantidad * insumo.cantidad
+            insumo_id = insumo.insumo.id
+            insumo_medida = insumo.insumo.medida.nombre if insumo.insumo.medida else "N/A"
 
-            if insumo_color_valido:
-                insumo_total = cantidad * insumo.cantidad  
-                insumo_id = insumo.insumo.id
-                insumo_color = insumo.color.nombre
-                color = insumo.color.id
-                insumo_medida = insumo.insumo.medida.nombre if insumo.insumo.medida else "N/A"
+            compras_total = CompraInsumo.objects.filter(
+                insumo=insumo.insumo,
+                color_id=color_id
+            ).aggregate(total=Sum('cantidad'))['total'] or 0
 
-                # Obtener la cantidad disponible en `CompraInsumo`
-                compras_total = CompraInsumo.objects.filter(
-                    insumo=insumo.insumo,
-                    color=color
-                ).aggregate(total=Sum('cantidad'))['total'] or 0
-
-                
-
-                # Calcular faltantes
-                cantidad_disponible = compras_total 
-                faltantes = insumo_total - cantidad_disponible if insumo_total > cantidad_disponible else 0
-
-                if f'{insumo_id}-{color}' in insumos_requeridos:
-                    insumos_requeridos[f'{insumo_id}-{color}']['cantidad'] += insumo_total
-                else:
-                    insumos_requeridos[f'{insumo_id}-{color}'] = {
-                        'insumo': insumo.insumo,
-                        'cantidad': insumo_total,
-                        'color': insumo.color.id,
-                        'medida': insumo_medida,
-                    }
+            if f'{insumo_id}-{color_id}' in insumos_requeridos:
+                insumos_requeridos[f'{insumo_id}-{color_id}']['cantidad'] += insumo_total
+            else:
+                insumos_requeridos[f'{insumo_id}-{color_id}'] = {
+                    'insumo': insumo.insumo,
+                    'cantidad': insumo_total,
+                    'color': color_id,
+                    'medida': insumo_medida,
+                }
  
 
     return insumos_requeridos
