@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Pagos a manualistas{% endblock %}
+
+{% block content %}
+<style>
+    .main-container { max-width: 1100px; margin: 0 auto; padding: 20px; }
+    .header-section { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding: 20px; background: #f9f9f9; border-radius: 10px; }
+    .header-section h1 { color: #3F0216; margin: 0; }
+    .filters-section { background: white; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 20px; margin-bottom: 20px; }
+    .filter-row { display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap; }
+    .filter-group { display: flex; flex-direction: column; min-width: 200px; }
+    .filter-group label { font-weight: bold; margin-bottom: 5px; color: #333; }
+    .filter-group select { padding: 8px 12px; border: 2px solid #ddd; border-radius: 5px; font-size: 14px; }
+    .btn-filter { background: #3F0216; color: white; border: none; border-radius: 5px; padding: 8px 16px; cursor: pointer; font-size: 14px; }
+    .btn-filter:hover { background: #5F0216; }
+    .table-container { background: white; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); overflow: hidden; }
+    .tabla { width: 100%; border-collapse: collapse; }
+    .tabla th, .tabla td { padding: 12px 14px; text-align: left; border-bottom: 1px solid #eee; }
+    .tabla th { background: #3F0216; color: white; font-weight: bold; }
+    .tabla tbody tr:hover { background: #f8f9fa; }
+    .tabla .num { text-align: right; }
+    .btn-ver { background: #17a2b8; color: white; text-decoration: none; padding: 6px 14px; border-radius: 5px; font-size: 13px; display: inline-block; }
+    .btn-ver:hover { color: white; background: #138496; }
+    .pendiente-cero { color: #28a745; font-weight: bold; }
+</style>
+
+<div class="main-container">
+    <div class="header-section">
+        <h1>💰 Pagos a manualistas</h1>
+    </div>
+
+    <div class="filters-section">
+        <form method="GET">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="manualista">Ver solo manualista</label>
+                    <select name="manualista" id="manualista">
+                        <option value="">Todos</option>
+                        {% for item in manualistas_detalle %}
+                        <option value="{{ item.manualista.id }}" {% if item.manualista.id|stringformat:"s" == manualista_filter %}selected{% endif %}>{{ item.manualista.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn-filter">Filtrar</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="table-container">
+        <table class="tabla">
+            <thead>
+                <tr>
+                    <th>Manualista</th>
+                    <th class="num">Total a pagar</th>
+                    <th class="num">Total pagado</th>
+                    <th class="num">Pendiente</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in manualistas_detalle %}
+                <tr>
+                    <td><strong>{{ item.manualista.nombre }}</strong></td>
+                    <td class="num">${{ item.total_a_pagar|floatformat:2 }}</td>
+                    <td class="num">${{ item.total_pagado|floatformat:2 }}</td>
+                    <td class="num">{% if item.pendiente > 0 %}${{ item.pendiente|floatformat:2 }}{% else %}<span class="pendiente-cero">$0.00</span>{% endif %}</td>
+                    <td>
+                        <a href="{% url 'pagos_manualista_detalle' item.manualista.id %}" class="btn-ver">Ver detalle</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" style="text-align: center; padding: 40px; color: #666;">No hay órdenes. Crea órdenes en Producción e indica el valor a pagar.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    document.getElementById('manualista').addEventListener('change', function() { this.form.submit(); });
+</script>
+{% endblock %}

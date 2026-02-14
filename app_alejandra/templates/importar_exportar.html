@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+{% block title %}Importar / Exportar datos{% endblock %}
+
+{% block content %}
+<style>
+    .ie-container { max-width: 900px; margin: 0 auto; padding: 24px; }
+    .ie-header {
+        background: #3F0216;
+        color: white;
+        padding: 20px 24px;
+        border-radius: 10px;
+        margin-bottom: 28px;
+    }
+    .ie-header h1 { margin: 0; font-size: 22px; }
+    .ie-section {
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        padding: 24px;
+        margin-bottom: 24px;
+    }
+    .ie-section h2 {
+        margin: 0 0 12px 0;
+        font-size: 18px;
+        color: #3F0216;
+        border-bottom: 2px solid #3F0216;
+        padding-bottom: 8px;
+    }
+    .ie-section p { color: #555; font-size: 14px; margin: 0 0 16px 0; }
+    .export-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 10px;
+    }
+    .export-grid a {
+        display: inline-block;
+        padding: 10px 14px;
+        background: #3F0216;
+        color: white;
+        text-align: center;
+        border-radius: 6px;
+        text-decoration: none;
+        font-size: 14px;
+    }
+    .export-grid a:hover { background: #5F0216; color: white; }
+    .import-form .form-row {
+        margin-bottom: 16px;
+    }
+    .import-form label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 6px;
+        color: #333;
+    }
+    .import-form select,
+    .import-form input[type="file"] {
+        padding: 8px 12px;
+        border: 2px solid #ddd;
+        border-radius: 6px;
+        font-size: 14px;
+    }
+    .import-form select { min-width: 200px; }
+    .btn-import {
+        background: #28a745;
+        color: white;
+        border: none;
+        padding: 10px 24px;
+        border-radius: 6px;
+        font-size: 14px;
+        cursor: pointer;
+        margin-top: 8px;
+    }
+    .btn-import:hover { background: #218838; }
+    .help-list { margin: 12px 0; padding-left: 20px; color: #555; font-size: 13px; line-height: 1.6; }
+    /* Popup de avisos */
+    .ie-popup-overlay {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 9999;
+        justify-content: center;
+        align-items: center;
+    }
+    .ie-popup-overlay.show { display: flex; }
+    .ie-popup {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        max-width: 420px;
+        width: 90%;
+        padding: 24px;
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+    .ie-popup h3 { margin: 0 0 12px 0; color: #3F0216; font-size: 18px; }
+    .ie-popup .ie-popup-messages { margin: 12px 0; }
+    .ie-popup .ie-popup-messages .success { color: #28a745; font-weight: 600; }
+    .ie-popup .ie-popup-messages .warning { color: #856404; }
+    .ie-popup .ie-popup-messages .error { color: #c00; }
+    .ie-popup .ie-popup-messages p { margin: 6px 0; }
+    .ie-popup-close {
+        display: block;
+        margin-top: 16px;
+        padding: 10px 24px;
+        background: #3F0216;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        width: 100%;
+    }
+    .ie-popup-close:hover { background: #5F0216; }
+</style>
+
+<div class="ie-container">
+    <div class="ie-header">
+        <h1>📥📤 Importar / Exportar datos</h1>
+        <p style="margin: 8px 0 0 0; opacity: 0.9;">Guardar y editar en masa mediante archivos CSV.</p>
+    </div>
+
+    <div class="ie-section">
+        <h2>Exportar (descargar CSV)</h2>
+        <p>Descargue los datos actuales para editarlos en Excel o similar. La primera fila del CSV es la cabecera.</p>
+        <div class="export-grid">
+            {% for key, conf in export_entities.items %}
+            <a href="{% url 'export_csv' %}?entity={{ key }}" download>{{ conf.label }}.csv</a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="ie-section">
+        <h2>Importar (cargar CSV)</h2>
+        <p>Suba un archivo CSV para <strong>crear</strong> registros nuevos o <strong>actualizar</strong> existentes (edición en masa). Si la fila tiene <strong>id</strong> y existe en el sistema, se actualiza; si no, se busca por nombre/referencia y se actualiza o se crea uno nuevo.</p>
+        <form method="post" enctype="multipart/form-data" class="import-form">
+            {% csrf_token %}
+            <div class="form-row">
+                <label for="entity">Entidad</label>
+                <select name="entity" id="entity" required>
+                    {% for key, conf in export_entities.items %}
+                    <option value="{{ key }}">{{ conf.label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-row">
+                <label for="archivo">Archivo CSV</label>
+                <input type="file" name="archivo" id="archivo" accept=".csv" required>
+            </div>
+            <button type="submit" class="btn-import">Importar</button>
+        </form>
+    </div>
+
+    <div class="ie-section">
+        <h2>Editar en masa</h2>
+        <p>Para modificar muchos registros a la vez:</p>
+        <ul class="help-list">
+            <li>Exporte la entidad que desee (ej. Clientes).</li>
+            <li>Abra el CSV en Excel, LibreOffice o similar y edite las celdas.</li>
+            <li>Guarde el archivo como CSV (UTF-8 si es posible).</li>
+            <li>En “Importar”, elija la misma entidad y suba el archivo.</li>
+            <li>Las filas con <strong>id</strong> existente se actualizarán; las que no tengan id o no existan se crearán como nuevos.</li>
+        </ul>
+        <p style="margin-top: 12px;"><strong>Columnas:</strong> Mantenga la primera fila de cabecera tal como se exportó. Productos e Insumos: la columna <em>colores</em> usa valores separados por <code>|</code> (ej. Rojo|Azul).</p>
+        <p style="margin-top: 8px;"><strong>Det productos:</strong> Cada fila es un insumo asignado a un producto (producto, insumo, color, cantidad). La columna <strong>delete</strong> sale vacía en el export; si en el CSV pone <code>True</code>, <code>1</code> o <code>si</code> en esa columna, esa relación producto-insumo se <strong>elimina</strong> al importar.</p>
+    </div>
+</div>
+
+<!-- Popup de avisos (éxito, advertencias, errores) -->
+<div id="iePopupOverlay" class="ie-popup-overlay">
+    <div class="ie-popup">
+        <h3 id="iePopupTitle">Aviso</h3>
+        <div id="iePopupMessages" class="ie-popup-messages"></div>
+        <button type="button" class="ie-popup-close" onclick="cerrarPopupImportar()">Aceptar</button>
+    </div>
+</div>
+
+<script>
+(function() {
+    var messages = [
+        {% for message in messages %}
+        { tags: "{{ message.tags }}", text: "{{ message|escapejs }}" }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ];
+    if (messages.length > 0) {
+        var overlay = document.getElementById('iePopupOverlay');
+        var title = document.getElementById('iePopupTitle');
+        var box = document.getElementById('iePopupMessages');
+        var hasSuccess = messages.some(function(m) { return m.tags === 'success'; });
+        var hasError = messages.some(function(m) { return m.tags === 'error'; });
+        title.textContent = hasSuccess ? 'Importación exitosa' : (hasError ? 'Error' : 'Aviso');
+        box.innerHTML = '';
+        messages.forEach(function(m) {
+            var p = document.createElement('p');
+            p.className = m.tags || '';
+            p.textContent = m.text;
+            box.appendChild(p);
+        });
+        overlay.classList.add('show');
+    }
+})();
+function cerrarPopupImportar() {
+    document.getElementById('iePopupOverlay').classList.remove('show');
+}
+document.getElementById('iePopupOverlay').addEventListener('click', function(e) {
+    if (e.target === this) cerrarPopupImportar();
+});
+</script>
+{% endblock %}

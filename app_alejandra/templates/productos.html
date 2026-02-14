@@ -1,0 +1,1106 @@
+{% extends "base.html" %}
+
+{% block title %}Productos{% endblock %}
+
+{% block content %}
+<style>
+    /* Estilo general */
+    .main-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .header-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        padding: 20px;
+        background-color: #f9f9f9;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .header-section h1 {
+        color: #3F0216;
+        margin: 0;
+    }
+
+    .search-filter-section {
+        display: flex;
+        gap: 15px;
+        align-items: center;
+        margin-bottom: 20px;
+        padding: 15px;
+        background-color: #f0f0f0;
+        border-radius: 8px;
+    }
+
+    .search-input {
+        flex: 1;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 14px;
+    }
+
+    .filter-select {
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 14px;
+        background-color: white;
+    }
+
+    .btn-primary {
+        background-color: #3F0216; /* Mismo color que los títulos de tabla */
+        color: white;
+        border: none;
+        border-radius: 5px;
+        padding: 10px 20px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        font-size: 14px;
+    }
+
+    .btn-primary:hover {
+        background-color: #5F0216;
+    }
+
+    .btn-secondary {
+        background-color: #3F0216;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        padding: 10px 20px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        font-size: 14px;
+    }
+
+    .btn-secondary:hover {
+        background-color: #5F0216;
+    }
+
+    .btn-danger {
+        background: none;
+        color: #dc3545;
+        border: none;
+        padding: 8px;
+        cursor: pointer;
+        transition: color 0.3s ease;
+        font-size: 16px;
+    }
+
+    .btn-danger:hover {
+        color: #c82333;
+        background-color: rgba(220, 53, 69, 0.1);
+        border-radius: 4px;
+    }
+
+    .btn-success {
+        background: none;
+        color: #28a745;
+        border: none;
+        padding: 8px;
+        cursor: pointer;
+        transition: color 0.3s ease;
+        font-size: 16px;
+    }
+
+    .btn-success:hover {
+        color: #218838;
+        background-color: rgba(40, 167, 69, 0.1);
+        border-radius: 4px;
+    }
+
+    /* Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        animation: fadeIn 0.3s ease;
+    }
+
+    .modal.show {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .modal-content {
+        background-color: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        max-width: 900px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+        animation: slideIn 0.3s ease;
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px 30px;
+        border-bottom: 1px solid #eee;
+        background-color: #3F0216;
+        color: white;
+        border-radius: 15px 15px 0 0;
+    }
+
+    .modal-header h2 {
+        margin: 0;
+        font-size: 24px;
+    }
+
+    .close {
+        color: white;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: color 0.3s ease;
+    }
+
+    .close:hover {
+        color: #ff6b6b;
+    }
+
+    .modal-body {
+        padding: 30px;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+        margin-bottom: 20px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 8px;
+        color: #333;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 12px;
+        font-size: 14px;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        transition: border-color 0.3s ease;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: #3F0216;
+    }
+
+    /* Checkbox styling */
+    .checkbox-label {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        font-weight: normal;
+        margin-bottom: 0;
+    }
+
+    .checkbox-label input[type="checkbox"] {
+        width: auto;
+        margin: 0;
+        transform: scale(1.2);
+    }
+
+    .checkbox-label span {
+        font-size: 14px;
+        color: #333;
+        line-height: 1.4;
+    }
+
+    .image-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        border: 2px dashed #ddd;
+        border-radius: 10px;
+        padding: 20px;
+        background-color: #fafafa;
+        transition: border-color 0.3s ease;
+    }
+
+    .image-container:hover {
+        border-color: #3F0216;
+    }
+
+    .preview-container {
+        width: 200px;
+        height: 200px;
+        border: 2px solid #ddd;
+        border-radius: 10px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 15px;
+        background-color: white;
+        overflow: hidden;
+    }
+
+    .image-preview {
+        max-width: 100%;
+        max-height: 100%;
+        display: none;
+        border-radius: 8px;
+    }
+
+    .modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 15px;
+        padding: 20px 30px;
+        border-top: 1px solid #eee;
+        background-color: #f9f9f9;
+        border-radius: 0 0 15px 15px;
+    }
+
+    /* Table Styles */
+    .table-container {
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        overflow: visible;
+    }
+
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 0;
+    }
+
+    .table th {
+        background-color: #3F0216;
+        color: white;
+        padding: 15px 12px;
+        text-align: center;
+        font-weight: bold;
+        border: none;
+    }
+
+    .table td {
+        padding: 12px;
+        text-align: center;
+        border-bottom: 1px solid #eee;
+        vertical-align: middle;
+    }
+
+    .table td:first-child {
+        position: relative;
+    }
+
+    .table tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+
+    .table img {
+        width: 40px;
+        height: 40px;
+        object-fit: cover;
+        border-radius: 5px;
+        border: 1px solid #ddd;
+        cursor: pointer;
+        transition: transform 0.3s ease;
+    }
+
+    .table img:hover {
+        transform: scale(4);
+        z-index: 1000;
+        position: absolute;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        border-radius: 8px;
+        background-color: white;
+        border: 2px solid #3F0216;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 5px;
+        justify-content: center;
+    }
+
+    .no-data {
+        text-align: center;
+        padding: 40px;
+        color: #666;
+        font-style: italic;
+    }
+
+    /* Pagination Styles */
+    .pagination-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px;
+        background-color: #f9f9f9;
+        border-top: 1px solid #eee;
+        border-radius: 0 0 10px 10px;
+    }
+
+    .pagination-info {
+        color: #666;
+        font-size: 14px;
+    }
+
+    .pagination-controls {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .per-page-selector {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .per-page-selector label {
+        font-size: 14px;
+        color: #666;
+        margin: 0;
+    }
+
+    .per-page-selector select {
+        padding: 5px 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 14px;
+        background-color: white;
+    }
+
+    .pagination-links {
+        display: flex;
+        gap: 5px;
+    }
+
+    .pagination-links a,
+    .pagination-links span {
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        text-decoration: none;
+        color: #3F0216;
+        font-size: 14px;
+        transition: all 0.3s ease;
+    }
+
+    .pagination-links a:hover {
+        background-color: #3F0216;
+        color: white;
+        border-color: #3F0216;
+    }
+
+    .pagination-links .current {
+        background-color: #3F0216;
+        color: white;
+        border-color: #3F0216;
+    }
+
+    .pagination-links .disabled {
+        color: #ccc;
+        cursor: not-allowed;
+        background-color: #f5f5f5;
+    }
+
+    /* Insumos Table Styles */
+    .insumos-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+        background-color: #fff;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .insumos-table thead {
+        background-color: #3F0216;
+        color: white;
+    }
+
+    .insumos-table th {
+        padding: 12px;
+        text-align: center;
+        font-weight: bold;
+    }
+
+    .insumos-table td {
+        padding: 10px;
+        border-bottom: 1px solid #ddd;
+        text-align: center;
+    }
+
+    .insumos-table select, 
+    .insumos-table input[type="number"] {
+        width: 90%;
+        padding: 8px;
+        font-size: 14px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        text-align: center;
+    }
+
+    .insumos-table tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+
+    .add-remove-btn {
+        background: #3F0216;
+        color: white;
+        padding: 6px 12px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background 0.3s ease;
+        font-size: 12px;
+    }
+
+    .add-remove-btn:hover {
+        background: #5F0216;
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @keyframes slideIn {
+        from { 
+            opacity: 0;
+            transform: translateY(-50px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .search-filter-section {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .modal-content {
+            width: 95%;
+            margin: 10px;
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+
+        .pagination-container {
+            flex-direction: column;
+            gap: 15px;
+            text-align: center;
+        }
+
+        .pagination-controls {
+            flex-direction: column;
+            gap: 10px;
+        }
+    }
+</style>
+
+<div class="main-container">
+    <!-- Header Section -->
+    <div class="header-section">
+        <h1>📦 Gestión de Productos</h1>
+        <button class="btn-primary" onclick="openModal()">
+            ➕ Nuevo Producto
+        </button>
+    </div>
+
+    <!-- Search and Filter Section -->
+    <div class="search-filter-section">
+        <input type="text" class="search-input" id="searchInput" placeholder="🔍 Buscar por referencia o nombre..." onkeyup="filterTable()">
+        <select class="filter-select" id="orderBySelect" onchange="changeOrderBy(this.value)">
+            <option value="referencia" {% if order_by == 'referencia' %}selected{% endif %}>Ordenar por Referencia</option>
+            <option value="nombre" {% if order_by == 'nombre' %}selected{% endif %}>Ordenar por Nombre</option>
+        </select>
+    </div>
+
+    <!-- Table Container -->
+    <div class="table-container">
+        <table class="table" id="productosTable">
+            <thead>
+                <tr>
+                    <th>Imagen</th>
+                    <th>Referencia</th>
+                    <th>Nombre</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for producto in productos_creados %}
+                <tr data-reference="{{ producto.referencia|lower }}" data-name="{{ producto.nombre|lower }}" data-colors="{% for color in producto.colores.all %}{{ color.nombre|lower }}{% if not forloop.last %},{% endif %}{% endfor %}">
+                    <td>
+                        {% if producto.imagen %}
+                            <img src="/{{ producto.imagen }}" alt="Imagen {{ producto.nombre }}" title="{{ producto.nombre }}">
+                        {% else %}
+                            <div style="width:40px; height:40px; background-color:#f0f0f0; border:1px solid #ddd; border-radius:5px; display:flex; align-items:center; justify-content:center; color:#999; font-size:12px;">Sin img</div>
+                        {% endif %}
+                    </td>
+                    <td><strong>{{ producto.referencia }}</strong></td>
+                    <td>{{ producto.nombre }}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn-success" onclick="editProducto({{ producto.id }})" title="Editar">
+                                ✏️
+                            </button>
+                            <button class="btn-danger" onclick="deleteProducto({{ producto.id }}, '{{ producto.nombre }}')" title="Eliminar">
+                                🗑️
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="no-data">
+                        📝 No hay productos registrados aún. ¡Crea tu primer producto!
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination Section -->
+    <div class="pagination-container">
+        <div class="pagination-info">
+            Mostrando {{ productos_creados.start_index }} a {{ productos_creados.end_index }} de {{ productos_creados.paginator.count }} productos
+        </div>
+        
+        <div class="pagination-controls">
+            <div class="per-page-selector">
+                <label for="perPageSelect">Mostrar:</label>
+                <select id="perPageSelect" onchange="changePerPage(this.value)">
+                    <option value="5" {% if per_page == '5' %}selected{% endif %}>5</option>
+                    <option value="10" {% if per_page == '10' %}selected{% endif %}>10</option>
+                    <option value="50" {% if per_page == '50' %}selected{% endif %}>50</option>
+                </select>
+            </div>
+            
+            {% if productos_creados.has_other_pages %}
+            <div class="pagination-links">
+                {% if productos_creados.has_previous %}
+                    <a href="?page=1&per_page={{ per_page }}&order_by={{ order_by }}">««</a>
+                    <a href="?page={{ productos_creados.previous_page_number }}&per_page={{ per_page }}&order_by={{ order_by }}">«</a>
+                {% else %}
+                    <span class="disabled">««</span>
+                    <span class="disabled">«</span>
+                {% endif %}
+
+                {% for num in productos_creados.paginator.page_range %}
+                    {% if productos_creados.number == num %}
+                        <span class="current">{{ num }}</span>
+                    {% elif num > productos_creados.number|add:'-3' and num < productos_creados.number|add:'3' %}
+                        <a href="?page={{ num }}&per_page={{ per_page }}&order_by={{ order_by }}">{{ num }}</a>
+                    {% endif %}
+                {% endfor %}
+
+                {% if productos_creados.has_next %}
+                    <a href="?page={{ productos_creados.next_page_number }}&per_page={{ per_page }}&order_by={{ order_by }}">»</a>
+                    <a href="?page={{ productos_creados.paginator.num_pages }}&per_page={{ per_page }}&order_by={{ order_by }}">»»</a>
+                {% else %}
+                    <span class="disabled">»</span>
+                    <span class="disabled">»»</span>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal para crear/editar producto -->
+<div id="productoModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modalTitle">➕ Nuevo Producto</h2>
+            <span class="close" onclick="closeModal()">&times;</span>
+        </div>
+        
+        <form method="POST" enctype="multipart/form-data" id="productoForm">
+            {% csrf_token %}
+            <input type="hidden" id="productoId" name="producto_id" value="">
+            <input type="hidden" id="formAction" name="action" value="guardar_formulario">
+            
+            <div class="modal-body">
+                <div class="form-grid">
+                    <!-- Columna 1: Imagen -->
+                    <div class="image-container">
+                        <div class="preview-container">
+                            <img id="imagePreview" class="image-preview" src="#" alt="Previsualización">
+                            <div id="noImageText" style="color: #999; text-align: center;">
+                                📷 Sin imagen seleccionada
+                            </div>
+                        </div>
+                        <button type="button" class="btn-secondary" onclick="document.getElementById('imagen').click()">
+                            📁 Seleccionar Imagen
+                        </button>
+                        <input type="file" id="imagen" name="imagen" accept="image/*" onchange="previewImage(event)" style="display: none;">
+                    </div>
+
+                    <!-- Columna 2: Formulario -->
+                    <div>
+                        <div class="form-group">
+                            <label for="nueva_referencia">Referencia *</label>
+                            <input type="text" id="nueva_referencia" name="nueva_referencia" placeholder="Ej: PROD001" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="nuevo_nombre">Nombre *</label>
+                            <input type="text" id="nuevo_nombre" name="nuevo_nombre" placeholder="Ej: Camiseta Básica" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="es_paquete_checkbox" name="es_paquete" onchange="toggleCantidadPaquete()">
+                                <span>¿Es un paquete?</span>
+                            </label>
+                        </div>
+                        
+                        <div class="form-group" id="cantidad_paquete_container" style="display: none;">
+                            <label for="cantidad_por_paquete">Cantidad por paquete</label>
+                            <input type="number" name="cantidad_por_paquete" id="cantidad_por_paquete" min="1">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Insumos requeridos -->
+                <div class="form-group">
+                    <label>Insumos Requeridos</label>
+                    <table class="insumos-table">
+                        <thead>
+                            <tr>
+                                <th>Insumo</th>
+                                <th>Cantidad</th>
+                                <th>Unidad</th>
+                                <th>Color</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="insumosTableBody">
+                            <tr class="insumo-row">
+                                <td>
+                                    <select name="insumo_id[]" onchange="actualizarColoresInsumo(this)">
+                                        <option value="">-- Seleccionar --</option> 
+                                        {% for insumo in insumos %}
+                                        <option value="{{ insumo.id }}">{{ insumo.nombre }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td>
+                                    <input type="number" name="cantidad[]" value="1" min="1">
+                                </td>
+                                <td>
+                                    <span class="insumo-unidad">—</span>
+                                </td>
+                                <td>
+                                    <select name="color_id[]" class="color-select">
+                                        <option value="">-- Seleccionar --</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <button type="button" class="add-remove-btn" onclick="eliminarFila(this)">❌</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <button type="button" class="add-remove-btn" onclick="agregarFila()" style="margin-top: 10px;">+ Agregar Insumo</button>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="closeModal()">Cancelar</button>
+                <button type="submit" class="btn-primary">💾 Guardar Producto</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    const insumoColores = {{ colores_json|safe }};
+    const insumosData = [
+        {% for insumo in insumos %}
+        {id: {{ insumo.id }}, nombre: "{{ insumo.nombre|escapejs }}", referencia: "{{ insumo.referencia|default:''|escapejs }}", medida: "{{ insumo.medida|default:''|escapejs }}"},
+        {% endfor %}
+    ];
+
+    function getInsumosOptions() {
+        return insumosData.map(insumo => {
+            const referencia = insumo.referencia ? insumo.referencia + ' - ' : '';
+            return `<option value="${insumo.id}">${referencia}${insumo.nombre}</option>`;
+        }).join('');
+    }
+
+    // Modal functions
+    function openModal(productoId = null) {
+        const modal = document.getElementById('productoModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const form = document.getElementById('productoForm');
+        
+        if (productoId) {
+            modalTitle.textContent = '✏️ Editar Producto';
+            // Don't reset form when editing - data will be loaded by editProducto function
+        } else {
+            modalTitle.textContent = '➕ Nuevo Producto';
+            // Reset form only when creating new producto
+            form.reset();
+            document.getElementById('imagePreview').style.display = 'none';
+            document.getElementById('noImageText').style.display = 'block';
+            document.getElementById('formAction').value = 'guardar_formulario';
+            document.getElementById('productoId').value = '';
+            
+            // Reset insumos table
+            const tbody = document.getElementById('insumosTableBody');
+            tbody.innerHTML = `
+                <tr class="insumo-row">
+                    <td>
+                        <select name="insumo_id[]" onchange="actualizarColoresInsumo(this)">
+                            <option value="">-- Seleccionar --</option> 
+                            ${getInsumosOptions()}
+                        </select>
+                    </td>
+                    <td>
+                        <input type="number" name="cantidad[]" value="1" min="1">
+                    </td>
+                    <td><span class="insumo-unidad">—</span></td>
+                    <td>
+                        <select name="color_id[]" class="color-select">
+                            <option value="">-- Seleccionar --</option>
+                        </select>
+                    </td>
+                    <td>
+                        <button type="button" class="add-remove-btn" onclick="eliminarFila(this)">❌</button>
+                    </td>
+                </tr>
+            `;
+        }
+        
+        modal.classList.add('show');
+    }
+    
+    function closeModal() {
+        const modal = document.getElementById('productoModal');
+        modal.classList.remove('show');
+    }
+    
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        const modal = document.getElementById('productoModal');
+        if (event.target === modal) {
+            closeModal();
+        }
+    }
+    
+    // Image preview function
+    function previewImage(event) {
+        const file = event.target.files[0];
+        const preview = document.getElementById('imagePreview');
+        const noImageText = document.getElementById('noImageText');
+
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+                noImageText.style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        } else {
+            preview.src = '#';
+            preview.style.display = 'none';
+            noImageText.style.display = 'block';
+        }
+    }
+    
+    // Filter table function
+    function filterTable() {
+        const searchInput = document.getElementById('searchInput').value.toLowerCase();
+        const table = document.getElementById('productosTable');
+        const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+
+        for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
+            const reference = row.getAttribute('data-reference') || '';
+            const name = row.getAttribute('data-name') || '';
+
+            const matchesSearch = reference.includes(searchInput) || name.includes(searchInput);
+
+            if (matchesSearch) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        }
+    }
+    
+    // Edit producto function
+    function editProducto(productoId) {
+        // Set form action to edit
+        document.getElementById('formAction').value = 'editar_producto';
+        document.getElementById('productoId').value = productoId;
+        
+        // Fetch producto data via AJAX
+        fetch(`/productos/data/${productoId}/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert('Error: ' + data.error);
+                    return;
+                }
+                
+                // Load data into form fields
+                document.getElementById('nueva_referencia').value = data.referencia || '';
+                document.getElementById('nuevo_nombre').value = data.nombre || '';
+                document.getElementById('es_paquete_checkbox').checked = data.es_paquete || false;
+                document.getElementById('cantidad_por_paquete').value = data.cantidad_por_paquete || '';
+                
+                // Toggle cantidad paquete container
+                toggleCantidadPaquete();
+                
+                // Load image if exists
+                if (data.imagen_url) {
+                    const imagePreview = document.getElementById('imagePreview');
+                    const noImageText = document.getElementById('noImageText');
+                    imagePreview.src = '/' + data.imagen_url;
+                    imagePreview.style.display = 'block';
+                    noImageText.style.display = 'none';
+                }
+                
+                // Load insumos
+                const tbody = document.getElementById('insumosTableBody');
+                tbody.innerHTML = '';
+                
+                if (data.insumos && data.insumos.length > 0) {
+                    data.insumos.forEach(insumo => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>
+                                <select name="insumo_id[]" onchange="actualizarColoresInsumo(this)">
+                                    <option value="">-- Seleccionar --</option> 
+                                    ${getInsumosOptions()}
+                                </select>
+                            </td>
+                            <td>
+                                <input type="number" name="cantidad[]" value="${insumo.cantidad}" min="1">
+                            </td>
+                            <td><span class="insumo-unidad">—</span></td>
+                            <td>
+                                <select name="color_id[]" class="color-select">
+                                    <option value="">-- Seleccionar --</option>
+                                </select>
+                            </td>
+                            <td>
+                                <button type="button" class="add-remove-btn" onclick="eliminarFila(this)">❌</button>
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                        
+                        // Set selected insumo and color
+                        const insumoSelect = row.querySelector('select[name="insumo_id[]"]');
+                        const colorSelect = row.querySelector('.color-select');
+                        insumoSelect.value = insumo.insumo_id;
+                        
+                        // Update colors and unit for this insumo
+                        actualizarColoresInsumo(insumoSelect);
+                        
+                        // Set selected color
+                        if (insumo.color_id) {
+                            setTimeout(() => {
+                                colorSelect.value = insumo.color_id;
+                            }, 100);
+                        }
+                    });
+                } else {
+                    // Add empty row if no insumos
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>
+                            <select name="insumo_id[]" onchange="actualizarColoresInsumo(this)">
+                                <option value="">-- Seleccionar --</option> 
+                                ${getInsumosOptions()}
+                            </select>
+                        </td>
+                        <td>
+                            <input type="number" name="cantidad[]" value="1" min="1">
+                        </td>
+                        <td><span class="insumo-unidad">—</span></td>
+                        <td>
+                            <select name="color_id[]" class="color-select">
+                                <option value="">-- Seleccionar --</option>
+                            </select>
+                        </td>
+                        <td>
+                            <button type="button" class="add-remove-btn" onclick="eliminarFila(this)">❌</button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                }
+                
+                // Open modal for editing
+                openModal(productoId);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al cargar los datos del producto');
+            });
+    }
+    
+    // Delete producto function
+    function deleteProducto(productoId, productoName) {
+        if (confirm(`¿Estás seguro de que quieres eliminar el producto "${productoName}"?`)) {
+            // Create a form to submit the delete action
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.style.display = 'none';
+            
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrfmiddlewaretoken';
+            csrfInput.value = csrfToken;
+            
+            const actionInput = document.createElement('input');
+            actionInput.type = 'hidden';
+            actionInput.name = 'action';
+            actionInput.value = 'eliminar_producto';
+            
+            const productoIdInput = document.createElement('input');
+            productoIdInput.type = 'hidden';
+            productoIdInput.name = 'producto_id';
+            productoIdInput.value = productoId;
+            
+            form.appendChild(csrfInput);
+            form.appendChild(actionInput);
+            form.appendChild(productoIdInput);
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+
+    function agregarFila() {
+        const tabla = document.getElementById('insumosTableBody');
+        const nuevaFila = document.createElement('tr');
+
+        nuevaFila.innerHTML = `
+            <td>
+                <select name="insumo_id[]" onchange="actualizarColoresInsumo(this)">
+                    <option value="">-- Seleccionar --</option> 
+                    ${getInsumosOptions()}
+                </select>
+            </td>
+            <td>
+                <input type="number" name="cantidad[]" value="1" min="1">
+            </td>
+            <td><span class="insumo-unidad">—</span></td>
+            <td>
+                <select name="color_id[]" class="color-select">
+                    <option value="">-- Seleccionar --</option>
+                </select>
+            </td>
+            <td>
+                <button type="button" class="add-remove-btn" onclick="eliminarFila(this)">❌</button>
+            </td>
+        `;
+
+        tabla.appendChild(nuevaFila);
+    }
+
+    function eliminarFila(btn) {
+        btn.parentElement.parentElement.remove();
+    }
+
+    function toggleCantidadPaquete() {
+        const checkbox = document.getElementById("es_paquete_checkbox");
+        const container = document.getElementById("cantidad_paquete_container");
+        container.style.display = checkbox.checked ? "block" : "none";
+    }
+
+    function actualizarColoresInsumo(select) {
+        const row = select.closest('tr');
+        const colorSelect = row.querySelector('.color-select');
+        const unidadSpan = row.querySelector('.insumo-unidad');
+        const insumoId = select.value;
+
+        colorSelect.innerHTML = '<option value="">-- Seleccionar --</option>';
+        if (unidadSpan) {
+            if (insumoId) {
+                const insumo = insumosData.find(i => String(i.id) === String(insumoId));
+                unidadSpan.textContent = insumo && insumo.medida ? insumo.medida : '—';
+            } else {
+                unidadSpan.textContent = '—';
+            }
+        }
+
+        if (insumoColores[insumoId]) {
+            insumoColores[insumoId].forEach(color => {
+                colorSelect.innerHTML += `<option value="${color.id}">${color.nombre}</option>`;
+            });
+        }
+    }
+    
+    // Change per page function
+    function changePerPage(perPage) {
+        const url = new URL(window.location);
+        url.searchParams.set('per_page', perPage);
+        url.searchParams.set('page', '1'); // Reset to first page
+        window.location.href = url.toString();
+    }
+    
+    // Change order by function
+    function changeOrderBy(orderBy) {
+        const url = new URL(window.location);
+        url.searchParams.set('order_by', orderBy);
+        url.searchParams.set('page', '1'); // Reset to first page
+        window.location.href = url.toString();
+    }
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(event) {
+        // ESC key to close modal
+        if (event.key === 'Escape') {
+            closeModal();
+        }
+        
+        // Ctrl+N to create new producto
+        if (event.ctrlKey && event.key === 'n') {
+            event.preventDefault();
+            openModal();
+        }
+    });
+</script>
+{% endblock %}

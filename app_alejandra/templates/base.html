@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load static %}
+    <title>{% block title %}Mi Aplicación{% endblock %}</title>
+    <style>
+        /* Estilo general */
+        body {
+            font-family: 'Montserrat', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Barra superior */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: black;
+            padding: 10px 20px;
+            color: white;
+            position: fixed;
+            width: 100%;
+            z-index: 10;
+            top: 0;
+            box-sizing: border-box;
+        }
+        .navbar img {
+            height: 50px;
+        }
+        .navbar .logo-center {
+            flex: 1;
+            text-align: center;
+        }
+        .navbar .btn-logout {
+            background-color: white;
+            color: black;
+            padding: 10px 15px;
+            text-decoration: none;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .navbar .btn-logout:hover {
+            background-color: #FE4D87;
+            color: white;
+        }
+
+        /* Menú lateral */
+        .menu-lateral {
+            position: fixed;
+            top: 75px;
+            left: 0;
+            width: auto;
+            background-color: white;
+            border-right: 1px solid #ccc;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            height: calc(100vh - 75px);
+            z-index: 1000;
+            overflow-y: auto;
+            display: none; /* Oculto por defecto */
+        }
+        .menu-lateral ul {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+        }
+        .menu-lateral li {
+            padding: 10px 20px;
+            border-bottom: 1px solid #ddd;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .menu-lateral li:last-child {
+            border-bottom: none;
+        }
+        .menu-lateral li:hover {
+            background-color: #f0f0f0;
+        }
+
+        /* Fondo con imagen */
+        .background {
+            {% comment %} background-image: url("{% static 'images/logo.png' %}");  {% endcomment %}
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            min-height: 100vh;
+        }
+
+        /* Contenido principal */
+        .content {
+            margin-top: 75px; /* Espacio debajo de la barra superior */
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Barra superior -->
+    <div class="navbar">
+        <!-- Botón menú lateral -->
+        <button id="menu-button" style="border: none; background: none; padding: 0; cursor: pointer;">
+            <img src="{% static 'images/menu_icon.png' %}" alt="menu">
+        </button>
+
+        <!-- Logo central -->
+        <div class="logo-center">
+            <img src="{% static 'images/logo.png' %}" alt="logo">
+        </div>
+
+        <!-- Botón de salir -->
+        <button class="btn-logout" onclick="location.href='{% url 'logout' %}'">Salir</button>
+    </div>
+
+    <!-- Mensajes superpuestos -->
+    <div class="messages">
+        {% if messages %}
+        <ul class="message-list">
+            {% for message in messages %}
+            <li class="message-item {{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </div>
+
+    <!-- Fondo con imagen -->
+    <div class="background">
+        <div class="content">
+            {% block content %}
+            <!-- Este bloque será reemplazado por el contenido específico de cada página -->
+            {% endblock %}
+        </div>
+    </div>
+
+    <!-- Menú lateral -->
+    <div id="menu-lateral" class="menu-lateral">
+        <ul>
+            <li onclick="location.href='/home/'">Home</li>
+            <li onclick="location.href='/insumos/'">Insumos</li>
+            {% comment %} <li onclick="location.href='/medidas/'">Medidas</li> {% endcomment %}
+            {% comment %} <li onclick="location.href='/inventario/'">Inventario</li> {% endcomment %}
+            <li onclick="location.href='/clientes/'">Clientes</li>
+            <li onclick="location.href='/productos/'">Productos</li>
+            {% comment %} <li onclick="location.href='/colores/'">Colores</li> {% endcomment %}
+            <li onclick="location.href='/proveedores/'">Proveedores</li>
+            <li onclick="location.href='/manualistas/'">Manualistas</li>
+            <li onclick="location.href='/compras/'">Compras</li>
+            <li onclick="location.href='/produccion/'">Produccion</li>
+            <li onclick="location.href='/ventas/'">Ventas</li>
+            <li onclick="location.href='/seguimiento-ventas/'">Seg. Ventas</li>
+            <li onclick="location.href='/seguimiento-produccion/'">Seg. Produccion</li>
+            <li onclick="location.href='/pagos-manualistas/'">Pagos manualistas</li>
+            <li onclick="location.href='/informes/'">Informes</li>
+            <li onclick="location.href='/importar-exportar/'">Importar / Exportar</li>
+        </ul>
+    </div>
+
+    <!-- Script para manejar el menú desplegable -->
+    <script>
+        const menuButton = document.getElementById('menu-button');
+        const menuLateral = document.getElementById('menu-lateral');
+
+        // Alternar visibilidad del menú lateral al hacer clic en el botón
+        menuButton.addEventListener('click', (e) => {
+            e.stopPropagation(); // Evita cerrar el menú al hacer clic en el botón
+            if (menuLateral.style.display === 'block') {
+                menuLateral.style.display = 'none';
+            } else {
+                menuLateral.style.display = 'block';
+            }
+        });
+
+        // Cerrar el menú lateral al hacer clic fuera de él
+        document.addEventListener('click', (e) => {
+            if (!menuLateral.contains(e.target) && e.target !== menuButton) {
+                menuLateral.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

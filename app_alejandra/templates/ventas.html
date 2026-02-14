@@ -1,0 +1,339 @@
+{% extends "base.html" %}
+{% block title %}Ventas{% endblock %}
+
+{% block content %}
+<style>
+    .main-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .header-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        padding: 20px;
+        background-color: #f9f9f9;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .header-section h1 {
+        color: #3F0216;
+        margin: 0;
+    }
+
+    .form-container {
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        padding: 30px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 8px;
+        color: #333;
+    }
+
+    .form-group select,
+    .form-group input {
+        width: 100%;
+        padding: 12px;
+        font-size: 14px;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        transition: border-color 0.3s ease;
+    }
+
+    .form-group select:focus,
+    .form-group input:focus {
+        outline: none;
+        border-color: #3F0216;
+    }
+
+    .btn-primary {
+        background-color: #3F0216;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        padding: 12px 24px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        font-size: 14px;
+        font-weight: bold;
+    }
+
+    .btn-primary:hover {
+        background-color: #5F0216;
+    }
+
+    .btn-secondary {
+        background-color: #28a745;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        padding: 10px 20px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        font-size: 14px;
+        margin-top: 15px;
+    }
+
+    .btn-secondary:hover {
+        background-color: #218838;
+    }
+
+    .btn-danger {
+        background-color: #dc3545;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        padding: 8px 12px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        font-size: 14px;
+    }
+
+    .btn-danger:hover {
+        background-color: #c82333;
+    }
+
+    /* Table Styles */
+    .table-container {
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        margin-top: 20px;
+    }
+
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 0;
+    }
+
+    .table th {
+        background-color: #3F0216;
+        color: white;
+        padding: 15px 12px;
+        text-align: center;
+        font-weight: bold;
+        border: none;
+    }
+
+    .table td {
+        padding: 12px;
+        text-align: center;
+        border-bottom: 1px solid #eee;
+        vertical-align: middle;
+    }
+
+    .table tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+
+    .table select,
+    .table input {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+
+    .table select:focus,
+    .table input:focus {
+        outline: none;
+        border-color: #3F0216;
+    }
+
+    .no-products {
+        text-align: center;
+        padding: 40px;
+        color: #666;
+        font-style: italic;
+    }
+
+    .section-title {
+        color: #3F0216;
+        font-size: 18px;
+        font-weight: bold;
+        margin: 30px 0 15px 0;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #3F0216;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .main-container {
+            padding: 10px;
+        }
+        
+        .form-container {
+            padding: 20px;
+        }
+        
+        .table {
+            font-size: 12px;
+        }
+        
+        .table th,
+        .table td {
+            padding: 8px 4px;
+        }
+    }
+</style>
+
+<div class="main-container">
+    <!-- Header Section -->
+    <div class="header-section">
+        <h1>💰 Gestión de Ventas</h1>
+    </div>
+
+    <div class="form-container">
+        <form method="POST" id="ventasForm">
+            {% csrf_token %}
+            
+            <!-- Selección de Cliente -->
+            <div class="form-group">
+                <label for="cliente">👤 Seleccionar Cliente *</label>
+                <select name="cliente" id="cliente" required>
+                    <option value="">-- Seleccionar Cliente --</option>
+                    {% for cliente in clientes %}
+                    <option value="{{ cliente.id }}">{{ cliente.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Productos a Vender -->
+            <div class="section-title">🛍️ Productos a Vender</div>
+            
+            <div class="table-container">
+                <table id="ventas-table">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Cantidad</th>
+                            <th>Valor Venta</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="no-products">
+                            <td colspan="4">No hay productos agregados. Haz clic en "Agregar Producto" para comenzar.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <button type="button" class="btn-secondary" onclick="agregarFila()">
+                ➕ Agregar Producto
+            </button>
+
+            <div class="form-group" style="margin-top: 30px;">
+                <button type="submit" class="btn-primary">
+                    💾 Registrar Venta
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    const productos = JSON.parse('{{ productos_json|safe }}');
+    console.log("Productos disponibles:", productos);
+
+    function agregarFila() {
+        const tbody = document.querySelector("#ventas-table tbody");
+        
+        // Remover mensaje de "no hay productos" si existe
+        const noProductsRow = tbody.querySelector('.no-products');
+        if (noProductsRow) {
+            noProductsRow.remove();
+        }
+
+        const row = document.createElement("tr");
+
+        // Crear opciones de productos (sin mostrar color)
+        let opcionesProducto = Object.keys(productos).map(key => {
+            const p = productos[key];
+            const referencia = p.producto_referencia ? `${p.producto_referencia} - ` : '';
+            return `<option value="${key}">${referencia}${p.producto_nombre}</option>`;
+        }).join("");
+
+        row.innerHTML = `
+            <td>
+                <select name="inventario_id[]" required>
+                    <option value="">-- Seleccionar Producto --</option>
+                    ${opcionesProducto}
+                </select>
+            </td>
+            <td>
+                <input type="number" name="cantidad[]" min="1" required placeholder="Cantidad">
+            </td>
+            <td>
+                <input type="number" name="valor_venta[]" step="0.01" required placeholder="0.00">
+            </td>
+            <td>
+                <button type="button" class="btn-danger" onclick="eliminarFila(this)">🗑️</button>
+            </td>
+        `;
+
+        tbody.appendChild(row);
+    }
+
+    function eliminarFila(button) {
+        const row = button.parentElement.parentElement;
+        const tbody = document.querySelector("#ventas-table tbody");
+        
+        row.remove();
+        
+        // Si no hay más filas, mostrar mensaje
+        if (tbody.children.length === 0) {
+            const noProductsRow = document.createElement("tr");
+            noProductsRow.className = "no-products";
+            noProductsRow.innerHTML = '<td colspan="4">No hay productos agregados. Haz clic en "Agregar Producto" para comenzar.</td>';
+            tbody.appendChild(noProductsRow);
+        }
+    }
+
+    // Validación del formulario
+    document.getElementById('ventasForm').addEventListener('submit', function(e) {
+        const tbody = document.querySelector("#ventas-table tbody");
+        const rows = tbody.querySelectorAll('tr:not(.no-products)');
+        
+        if (rows.length === 0) {
+            e.preventDefault();
+            alert('Debes agregar al menos un producto para la venta.');
+            return false;
+        }
+        
+        // Validar que todos los campos estén completos
+        let allValid = true;
+        rows.forEach(row => {
+            const select = row.querySelector('select[name="inventario_id[]"]');
+            const cantidad = row.querySelector('input[name="cantidad[]"]');
+            const valor = row.querySelector('input[name="valor_venta[]"]');
+            
+            if (!select.value || !cantidad.value || !valor.value) {
+                allValid = false;
+            }
+        });
+        
+        if (!allValid) {
+            e.preventDefault();
+            alert('Todos los campos son obligatorios. Por favor completa todos los productos.');
+            return false;
+        }
+    });
+</script>
+{% endblock %}

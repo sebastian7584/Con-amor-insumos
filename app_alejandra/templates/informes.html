@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% block title %}Informes{% endblock %}
+
+{% block content %}
+<style>
+    .informes-container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+    .informes-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+        padding: 16px 20px;
+        background: #3F0216;
+        color: white;
+        border-radius: 10px;
+    }
+    .informes-header h1 { margin: 0; font-size: 24px; }
+    .btn-pdf {
+        background: white;
+        color: #3F0216;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: bold;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .btn-pdf:hover { background: #f0f0f0; color: #3F0216; }
+    .report-section {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        margin-bottom: 24px;
+        overflow: hidden;
+    }
+    .report-section h2 {
+        margin: 0;
+        padding: 14px 20px;
+        background: #f0f4f8;
+        color: #3F0216;
+        font-size: 18px;
+        border-bottom: 2px solid #3F0216;
+    }
+    .report-section .intro {
+        padding: 12px 20px;
+        color: #555;
+        font-size: 14px;
+        border-bottom: 1px solid #eee;
+    }
+    .report-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+    }
+    .report-table th, .report-table td {
+        padding: 10px 14px;
+        text-align: left;
+        border-bottom: 1px solid #eee;
+    }
+    .report-table th {
+        background: #3F0216;
+        color: white;
+        font-weight: 600;
+    }
+    .report-table tr:hover { background: #f9f9f9; }
+    .report-table .num { text-align: right; }
+    .report-table .faltante { font-weight: bold; color: #c00; }
+    .empty-msg {
+        padding: 24px 20px;
+        color: #666;
+        text-align: center;
+    }
+</style>
+
+<div class="informes-container">
+    <div class="informes-header">
+        <h1>📊 Informes</h1>
+        <a href="{% url 'informes_pdf' %}?print=1" target="_blank" class="btn-pdf">📄 Ver / Imprimir (PDF)</a>
+    </div>
+
+    <div class="report-section">
+        <h2>1. Vendido sin inventario</h2>
+        <p class="intro">Productos cuya cantidad vendida supera el inventario disponible (Terminado + En producción). Sirve como guía para generar órdenes de producción y cubrir lo ya vendido.</p>
+        {% if reporte_vendido %}
+        <table class="report-table">
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Referencia</th>
+                    <th>Color</th>
+                    <th class="num">Vendido</th>
+                    <th class="num">Disponible</th>
+                    <th class="num">Faltante</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in reporte_vendido %}
+                <tr>
+                    <td>{{ r.producto_nombre }}</td>
+                    <td>{{ r.producto_referencia }}</td>
+                    <td>{{ r.color_nombre }}</td>
+                    <td class="num">{{ r.vendido }}</td>
+                    <td class="num">{{ r.disponible }}</td>
+                    <td class="num faltante">{{ r.faltante }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="empty-msg">No hay faltantes: lo vendido está cubierto por inventario disponible.</p>
+        {% endif %}
+    </div>
+
+    <div class="report-section">
+        <h2>2. Insumos faltantes para producción</h2>
+        <p class="intro">Insumos requeridos por órdenes de producción (Pendiente / En proceso) que no tienen cantidad suficiente. Sirve como guía para órdenes de compra.</p>
+        {% if reporte_insumos %}
+        <table class="report-table">
+            <thead>
+                <tr>
+                    <th>Insumo</th>
+                    <th>Referencia</th>
+                    <th>Color</th>
+                    <th>Medida</th>
+                    <th class="num">Requerido</th>
+                    <th class="num">Disponible</th>
+                    <th class="num">Faltante</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in reporte_insumos %}
+                <tr>
+                    <td>{{ r.insumo_nombre }}</td>
+                    <td>{{ r.insumo_referencia }}</td>
+                    <td>{{ r.color_nombre }}</td>
+                    <td>{{ r.medida_nombre }}</td>
+                    <td class="num">{{ r.requerido }}</td>
+                    <td class="num">{{ r.disponible }}</td>
+                    <td class="num faltante">{{ r.faltante }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="empty-msg">No hay insumos faltantes para las órdenes de producción activas, o no hay órdenes Pendiente/En proceso.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+
+{% block title %}Producción{% endblock %}
+
+{% block content %}
+<style>
+    .form-container {
+        max-width: 800px;
+        margin: 20px auto;
+        padding: 20px;
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        text-align: center;
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+        text-align: left;
+    }
+
+    .form-group select, .form-group input {
+        width: 100%;
+        padding: 10px;
+        font-size: 14px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+    }
+
+    .table-container {
+        margin-top: 20px;
+        overflow-x: auto;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+    }
+
+    th, td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+    }
+
+    th {
+        background: #3F0216;
+        color: white;
+    }
+
+    .delete-btn {
+        background: #E74C3C;
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+    }
+
+    .delete-btn:hover {
+        background: #C0392B;
+    }
+
+    .calculate-btn {
+        background: #28A745;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        margin-top: 10px;
+    }
+
+    .calculate-btn:hover {
+        background: #218838;
+    }
+
+    #error-list {
+        color: red;
+    }
+</style>
+
+<div class="form-container">
+    <h2>Orden de Producción</h2>
+
+    <form method="POST" action="{% url 'guardar_produccion' %}">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="manualista">Seleccionar Manualista</label>
+            <select name="manualista">
+                {% for manualista in manualistas %}
+                <option value="{{ manualista.id }}">{{ manualista.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="fecha_inicio">Fecha de Inicio</label>
+            <input type="date" name="fecha_inicio" required>
+        </div>
+
+        <div class="form-group">
+            <label for="fecha_tentativa">Fecha Tentativa</label>
+            <input type="date" name="fecha_tentativa" required>
+        </div>
+
+        <div class="form-group">
+            <label for="valor_a_pagar">Valor a pagar al manualista ($)</label>
+            <input type="number" name="valor_a_pagar" id="valor_a_pagar" step="0.01" min="0" placeholder="0.00" value="0">
+        </div>
+
+        <h3>Productos en Producción</h3>
+        <div class="table-container">
+            <table id="produccion-table">
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        {% comment %} <th>Color</th> {% endcomment %}
+                        <th>Cantidad</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <button type="button" onclick="agregarFila()">+ Agregar Producto</button>
+        <button type="button" class="calculate-btn" onclick="calcularProduccion()">Calcular Insumos</button>
+
+        <h3>Errores y Advertencias</h3>
+        <ul id="error-list"></ul>
+
+        <h3>Insumos Requeridos</h3>
+        <table id="insumos-requeridos-table">
+            <thead>
+                <tr>
+                    <th>Insumo</th>
+                    <th>Color</th>
+                    <th>Cantidad</th>
+                    <th>Unidad</th>
+                    <th>Faltantes</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+        <div class="form-group">
+            <button type="submit" id="guardar-btn" disabled>Guardar Producción</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    const productos = JSON.parse('{{ productos_json|safe }}');
+    const colores = JSON.parse('{{ colores_json|safe }}');
+
+    function agregarFila() {
+        const table = document.querySelector("#produccion-table tbody");
+        const row = document.createElement("tr");
+
+        row.innerHTML = `
+            <td>
+                <select name="producto_id[]" class="producto-select" onchange="actualizarColores(this)">
+                    <option value="">-- Seleccionar --</option>
+                    ${productos.map(p => `<option value="${p.id}">${p.nombre}</option>`).join("")}
+                </select>
+            </td>
+            <td>
+                <input type="number" name="cantidad[]" class="cantidad-input" min="1" required>
+            </td>
+            <td>
+                <button type="button" class="delete-btn" onclick="this.parentElement.parentElement.remove();">❌</button>
+            </td>`;
+
+        table.appendChild(row);
+    }
+
+    function actualizarColores(select) {
+        const row = select.parentElement.parentElement;
+        const productoId = select.value;
+        const colorSelect = row.querySelector(".color-select");
+
+        colorSelect.innerHTML = `<option value="">-- Seleccionar --</option>`;
+        if (productoId && colores[productoId]) {
+            colores[productoId].forEach(color => {
+                colorSelect.innerHTML += `<option value="${color.id}">${color.nombre}</option>`;
+            });
+        }
+    }
+
+    function calcularProduccion() {
+        const errorList = document.getElementById("error-list");
+        errorList.innerHTML = "";
+
+        const productoIds = [...document.querySelectorAll("select[name='producto_id[]']")].map(e => e.value);
+        const colorIds = [...document.querySelectorAll("select[name='color_id[]']")].map(e => e.value);
+        const cantidades = [...document.querySelectorAll("input[name='cantidad[]']")].map(e => e.value);
+
+        fetch(`/produccion/calcular/?${new URLSearchParams({ 
+            'producto_id[]': productoIds,
+            'color_id[]': colorIds,
+            'cantidad[]': cantidades
+        })}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.errores.length > 0) {
+                data.errores.forEach(error => {
+                    errorList.innerHTML += `<li>${error}</li>`;
+                });
+                document.getElementById("guardar-btn").disabled = true;
+            } else {
+                
+                document.getElementById("guardar-btn").disabled = false;
+            }
+
+            // Mostrar insumos requeridos en la tabla
+            const insumosTable = document.getElementById("insumos-requeridos-table").querySelector("tbody");
+            insumosTable.innerHTML = "";
+            data.insumos_requeridos.forEach(insumo => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${insumo.nombre}</td>
+                    <td>${insumo.color}</td>
+                    <td>${insumo.cantidad}</td>
+                    <td>${insumo.medida}</td>
+                    <td>${insumo.faltantes > 0 ? `<span style="color: red;">${insumo.faltantes}</span>` : insumo.faltantes}</td>
+                `;
+                insumosTable.appendChild(row);
+            });
+        })
+        .catch(error => console.error('Error en la validación:', error));
+    }
+</script>
+
+{% endblock %}

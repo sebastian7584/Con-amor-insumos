@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Informes - Para imprimir / PDF</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 24px 40px;
+            color: #222;
+            background: #fff;
+        }
+        .no-print { margin-bottom: 20px; }
+        @media print {
+            .no-print { display: none !important; }
+            body { padding: 12px; }
+        }
+        .header-pdf {
+            border-bottom: 3px solid #3F0216;
+            padding-bottom: 12px;
+            margin-bottom: 24px;
+        }
+        .header-pdf h1 { margin: 0; font-size: 22px; color: #3F0216; }
+        .header-pdf .fecha { margin-top: 6px; font-size: 13px; color: #666; }
+        .report-block { margin-bottom: 28px; break-inside: avoid; }
+        .report-block h2 {
+            margin: 0 0 8px 0;
+            font-size: 16px;
+            color: #3F0216;
+            border-bottom: 2px solid #3F0216;
+            padding-bottom: 6px;
+        }
+        .report-block .intro {
+            font-size: 12px;
+            color: #555;
+            margin-bottom: 12px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        th, td {
+            padding: 8px 10px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        th {
+            background: #3F0216;
+            color: white;
+            font-weight: 600;
+        }
+        .num { text-align: right; }
+        .faltante { font-weight: bold; color: #c00; }
+        .empty-msg { color: #666; font-style: italic; padding: 12px 0; }
+        .btn-print {
+            background: #3F0216;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .btn-print:hover { background: #5F0216; }
+        .btn-back {
+            background: #6c757d;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            display: inline-block;
+            margin-right: 10px;
+        }
+        .btn-back:hover { color: white; background: #5a6268; }
+    </style>
+</head>
+<body>
+    <div class="no-print">
+        <a href="{% url 'informes' %}" class="btn-back">← Volver a Informes</a>
+        <button type="button" class="btn-print" onclick="window.print();">🖨️ Imprimir / Guardar como PDF</button>
+    </div>
+
+    <div class="header-pdf">
+        <h1>Informes</h1>
+        <div class="fecha">Generado: {{ now|date:"d/m/Y H:i" }}</div>
+    </div>
+
+    <div class="report-block">
+        <h2>1. Vendido sin inventario</h2>
+        <p class="intro">Productos cuya cantidad vendida supera el inventario disponible. Guía para órdenes de producción.</p>
+        {% if reporte_vendido %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Referencia</th>
+                    <th>Color</th>
+                    <th class="num">Vendido</th>
+                    <th class="num">Disponible</th>
+                    <th class="num">Faltante</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in reporte_vendido %}
+                <tr>
+                    <td>{{ r.producto_nombre }}</td>
+                    <td>{{ r.producto_referencia }}</td>
+                    <td>{{ r.color_nombre }}</td>
+                    <td class="num">{{ r.vendido }}</td>
+                    <td class="num">{{ r.disponible }}</td>
+                    <td class="num faltante">{{ r.faltante }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="empty-msg">No hay faltantes: lo vendido está cubierto por inventario disponible.</p>
+        {% endif %}
+    </div>
+
+    <div class="report-block">
+        <h2>2. Insumos faltantes para producción</h2>
+        <p class="intro">Insumos requeridos por órdenes Pendiente/En proceso sin cantidad suficiente. Guía para órdenes de compra.</p>
+        {% if reporte_insumos %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Insumo</th>
+                    <th>Referencia</th>
+                    <th>Color</th>
+                    <th>Medida</th>
+                    <th class="num">Requerido</th>
+                    <th class="num">Disponible</th>
+                    <th class="num">Faltante</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in reporte_insumos %}
+                <tr>
+                    <td>{{ r.insumo_nombre }}</td>
+                    <td>{{ r.insumo_referencia }}</td>
+                    <td>{{ r.color_nombre }}</td>
+                    <td>{{ r.medida_nombre }}</td>
+                    <td class="num">{{ r.requerido }}</td>
+                    <td class="num">{{ r.disponible }}</td>
+                    <td class="num faltante">{{ r.faltante }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="empty-msg">No hay insumos faltantes para las órdenes activas.</p>
+        {% endif %}
+    </div>
+
+    <script>
+        // Si se abrió con ?print=1, abrir diálogo de impresión
+        if (window.location.search.indexOf('print=1') !== -1) {
+            window.onload = function() { window.print(); };
+        }
+    </script>
+</body>
+</html>

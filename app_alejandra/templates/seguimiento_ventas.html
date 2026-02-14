@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+{% block title %}Seguimiento de Ventas{% endblock %}
+
+{% block content %}
+<style>
+    .main-container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+    .header-section {
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 30px; padding: 20px;
+        background-color: #f9f9f9; border-radius: 10px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .header-section h1 { color: #3F0216; margin: 0; }
+    .filters-section {
+        background-color: white; border-radius: 10px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        padding: 20px; margin-bottom: 20px;
+    }
+    .filters-row { display: flex; gap: 15px; align-items: end; flex-wrap: wrap; }
+    .filter-group { display: flex; flex-direction: column; min-width: 150px; }
+    .filter-group label { font-weight: bold; margin-bottom: 5px; color: #333; font-size: 14px; }
+    .filter-group input, .filter-group select {
+        padding: 8px 12px; border: 2px solid #ddd; border-radius: 5px; font-size: 14px;
+    }
+    .btn-filter {
+        background-color: #3F0216; color: white; border: none; border-radius: 5px;
+        padding: 8px 16px; cursor: pointer; font-size: 14px; height: fit-content;
+    }
+    .btn-filter:hover { background-color: #5F0216; }
+    .btn-clear {
+        background-color: #6c757d; color: white; border: none; border-radius: 5px;
+        padding: 8px 16px; cursor: pointer; font-size: 14px; height: fit-content;
+        text-decoration: none; display: inline-block;
+    }
+    .btn-clear:hover { color: white; text-decoration: none; }
+    .venta-card {
+        background-color: white; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px; overflow: hidden;
+    }
+    .venta-header {
+        background-color: #3F0216; color: white; padding: 15px 20px;
+        display: flex; justify-content: space-between; align-items: center; cursor: pointer;
+    }
+    .venta-header:hover { background-color: #5F0216; }
+    .collapse-arrow { font-size: 18px; transition: transform 0.3s ease; display: inline-block; }
+    .collapse-arrow.collapsed { transform: rotate(0deg); }
+    .collapse-arrow:not(.collapsed) { transform: rotate(90deg); }
+    .venta-body { padding: 20px; display: block; }
+    .venta-body.collapsed { display: none; }
+    .linea-item {
+        border: 1px solid #ddd; border-radius: 8px; padding: 15px; background-color: #f8f9fa;
+        margin-bottom: 12px;
+    }
+    .linea-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+    .linea-info { display: flex; gap: 15px; align-items: center; flex-wrap: wrap; }
+    .progress-container { flex: 1; min-width: 120px; }
+    .progress-bar {
+        width: 100%; height: 20px; background-color: #e9ecef; border-radius: 10px; overflow: hidden;
+    }
+    .progress-fill { height: 100%; background-color: #28a745; transition: width 0.3s ease; }
+    .progress-text { text-align: center; font-size: 12px; margin-top: 5px; color: #666; }
+    .btn-despachar {
+        background-color: #17a2b8; color: white; border: none; border-radius: 5px;
+        padding: 8px 16px; cursor: pointer; font-size: 14px;
+    }
+    .btn-despachar:hover { background-color: #138496; }
+    .tabla-despacho { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+    .tabla-despacho th, .tabla-despacho td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #eee; }
+    .tabla-despacho th { background: #f0f0f0; font-size: 12px; color: #555; }
+    .tabla-despacho input[type="number"] { width: 80px; padding: 6px 8px; text-align: center; }
+    .form-despacho-batch { margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd; }
+    .form-despacho-batch .obs { width: 100%; margin-bottom: 12px; padding: 10px; border-radius: 6px; border: 1px solid #ddd; }
+    .btn-registrar-batch { background-color: #28a745; color: white; border: none; border-radius: 6px; padding: 12px 24px; cursor: pointer; font-size: 15px; font-weight: bold; }
+    .btn-registrar-batch:hover { background-color: #218838; }
+    .btn-registrar-batch:disabled { background-color: #ccc; cursor: not-allowed; }
+    .despachos-history {
+        margin-top: 12px; padding: 10px; background-color: white; border-radius: 5px; border: 1px solid #ddd;
+    }
+    .despacho-item { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #eee; }
+    .despacho-item:last-child { border-bottom: none; }
+    .despacho-fecha { font-size: 12px; color: #666; }
+    .pagination-section {
+        display: flex; justify-content: space-between; align-items: center; margin-top: 30px;
+        padding: 20px; background-color: #f9f9f9; border-radius: 10px;
+    }
+    .per-page-selector { display: flex; align-items: center; gap: 10px; }
+    .per-page-selector select { padding: 5px 10px; border: 2px solid #ddd; border-radius: 5px; font-size: 14px; }
+    .pagination { display: flex; gap: 5px; align-items: center; }
+    .pagination a, .pagination span {
+        padding: 8px 12px; border: 1px solid #ddd; border-radius: 5px; text-decoration: none; color: #333;
+    }
+    .pagination a:hover { background-color: #3F0216; color: white; border-color: #3F0216; }
+    .pagination .current { background-color: #3F0216; color: white; border-color: #3F0216; }
+    .form-despacho-venta { margin: 0; }
+    @media (max-width: 768px) {
+        .filters-row { flex-direction: column; align-items: stretch; }
+        .filter-group { min-width: auto; }
+        .linea-header { flex-direction: column; align-items: flex-start; }
+    }
+</style>
+
+<div class="main-container">
+    <div class="header-section">
+        <h1>🚚 Seguimiento de Ventas</h1>
+    </div>
+
+    <div class="filters-section">
+        <form method="GET" id="filtersForm">
+            <div class="filters-row">
+                <div class="filter-group">
+                    <label for="search">🔍 Buscar (ID o cliente):</label>
+                    <input type="text" name="search" id="search" value="{{ search_query }}" placeholder="Ej: 5 o nombre cliente">
+                </div>
+                <div class="filter-group">
+                    <label for="cliente">👤 Cliente:</label>
+                    <select name="cliente" id="cliente">
+                        <option value="">Todos los clientes</option>
+                        {% for c in clientes %}
+                        <option value="{{ c.id }}" {% if c.id|stringformat:"s" == cliente_filter %}selected{% endif %}>{{ c.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn-filter">🔍 Filtrar</button>
+                <a href="{% url 'seguimiento_ventas' %}" class="btn-clear">🗑️ Limpiar</a>
+            </div>
+        </form>
+    </div>
+
+    {% for venta in ventas %}
+    <div class="venta-card">
+        <div class="venta-header" onclick="toggleVenta({{ venta.id }})">
+            <div class="venta-info">
+                <span class="collapse-arrow collapsed" id="arrow-{{ venta.id }}">▶</span>
+                <strong>Factura {{ venta.numero|default:venta.id }}</strong>
+                <span>{{ venta.cliente.nombre }}</span>
+                <span style="font-size: 12px; opacity: 0.9;">{{ venta.fecha|date:"d/m/Y H:i" }}</span>
+            </div>
+            <div style="font-size: 14px;">
+                {{ venta.lineas.count }} ítem{{ venta.lineas.count|pluralize }}
+            </div>
+        </div>
+
+        <div class="venta-body collapsed" id="body-{{ venta.id }}">
+            <form id="form-despacho-{{ venta.id }}" method="POST" class="form-despacho-venta">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="registrar_despachos">
+                <table class="tabla-despacho">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Vendido</th>
+                            <th>Despachado</th>
+                            <th>Pendiente</th>
+                            <th>A despachar ahora</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for linea in venta.lineas.all %}
+                        <tr {% if linea.cantidad_pendiente == 0 %}style="background-color: #f0fff0;"{% endif %}>
+                            <td><strong>{{ linea.producto.nombre }}</strong></td>
+                            <td>{{ linea.cantidad }}</td>
+                            <td>{{ linea.cantidad_despachada }}</td>
+                            <td>{{ linea.cantidad_pendiente }}</td>
+                            <td>
+                                {% if linea.cantidad_pendiente > 0 %}
+                                <input type="hidden" name="linea_id[]" value="{{ linea.id }}">
+                                <input type="number" name="cantidad_despachada[]" min="0" max="{{ linea.cantidad_pendiente }}" value="0" placeholder="0" title="Máx. {{ linea.cantidad_pendiente }}">
+                                {% else %}
+                                <span style="color: #28a745;">✅</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <div class="form-despacho-batch">
+                    <label for="obs-{{ venta.id }}">Observaciones (opcional):</label>
+                    <textarea name="observaciones" id="obs-{{ venta.id }}" class="obs" rows="2" placeholder="Ej: Envío por mensajería, dirección..."></textarea>
+                    <button type="submit" class="btn-registrar-batch">📦 Registrar despachos de esta orden</button>
+                </div>
+            </form>
+
+            {% for linea in venta.lineas.all %}
+                {% if linea.despachos.all %}
+            <div class="despachos-history" style="margin-top: 10px;">
+                <strong style="font-size: 12px; color: #666;">📋 {{ linea.producto.nombre }} — Historial:</strong>
+                {% for d in linea.despachos.all %}
+                <div class="despacho-item">
+                    <span>{{ d.cantidad_despachada }} uds{% if d.observaciones %} — {{ d.observaciones|truncatewords:8 }}{% endif %}</span>
+                    <span class="despacho-fecha">{{ d.fecha|date:"d/m/Y H:i" }}</span>
+                </div>
+                {% endfor %}
+            </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+    {% empty %}
+    <div class="venta-card">
+        <div class="venta-body" style="text-align: center; padding: 40px;">
+            <h3 style="color: #666;">📝 No hay ventas registradas</h3>
+            <p style="color: #999;">Las ventas aparecerán aquí. Registra ventas en <a href="{% url 'ventas' %}">Ventas</a>.</p>
+        </div>
+    </div>
+    {% endfor %}
+
+    {% if ventas.has_other_pages %}
+    <div class="pagination-section">
+        <div class="pagination-info">
+            <span>Mostrando {{ ventas.start_index }} - {{ ventas.end_index }} de {{ ventas.paginator.count }} ventas</span>
+            <div class="per-page-selector">
+                <label for="perPageSelect">Por página:</label>
+                <select id="perPageSelect" onchange="changePerPage(this.value)">
+                    <option value="5" {% if per_page == 5 %}selected{% endif %}>5</option>
+                    <option value="10" {% if per_page == 10 %}selected{% endif %}>10</option>
+                    <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>
+                </select>
+            </div>
+        </div>
+        <div class="pagination">
+            {% if ventas.has_previous %}
+            <a href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if cliente_filter %}&cliente={{ cliente_filter }}{% endif %}&per_page={{ per_page }}">«</a>
+            <a href="?page={{ ventas.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if cliente_filter %}&cliente={{ cliente_filter }}{% endif %}&per_page={{ per_page }}">‹</a>
+            {% endif %}
+            {% for num in ventas.paginator.page_range %}
+                {% if num == ventas.number %}<span class="current">{{ num }}</span>
+                {% elif num > ventas.number|add:"-3" and num < ventas.number|add:"3" %}
+                <a href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if cliente_filter %}&cliente={{ cliente_filter }}{% endif %}&per_page={{ per_page }}">{{ num }}</a>
+                {% endif %}
+            {% endfor %}
+            {% if ventas.has_next %}
+            <a href="?page={{ ventas.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if cliente_filter %}&cliente={{ cliente_filter }}{% endif %}&per_page={{ per_page }}">›</a>
+            <a href="?page={{ ventas.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if cliente_filter %}&cliente={{ cliente_filter }}{% endif %}&per_page={{ per_page }}">»</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    function toggleVenta(ventaId) {
+        var body = document.getElementById('body-' + ventaId);
+        var arrow = document.getElementById('arrow-' + ventaId);
+        if (body.classList.contains('collapsed')) {
+            body.classList.remove('collapsed');
+            arrow.classList.remove('collapsed');
+            arrow.textContent = '▼';
+        } else {
+            body.classList.add('collapsed');
+            arrow.classList.add('collapsed');
+            arrow.textContent = '▶';
+        }
+    }
+    function changePerPage(perPage) {
+        var url = new URL(window.location.href);
+        url.searchParams.set('per_page', perPage);
+        url.searchParams.set('page', '1');
+        window.location.href = url.toString();
+    }
+    document.getElementById('cliente').addEventListener('change', function() { document.getElementById('filtersForm').submit(); });
+</script>
+{% endblock %}

@@ -1,0 +1,971 @@
+{% extends "base.html" %}
+
+{% block title %}Insumos{% endblock %}
+
+{% block content %}
+<style>
+    /* Estilo general */
+    .main-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .header-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        padding: 20px;
+        background-color: #f9f9f9;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .header-section h1 {
+        color: #3F0216;
+        margin: 0;
+    }
+
+    .search-filter-section {
+        display: flex;
+        gap: 15px;
+        align-items: center;
+        margin-bottom: 20px;
+        padding: 15px;
+        background-color: #f0f0f0;
+        border-radius: 8px;
+    }
+
+    .search-input {
+        flex: 1;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 14px;
+    }
+
+    .filter-select {
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 14px;
+        background-color: white;
+    }
+
+    .btn-primary {
+        background-color: #3F0216; /* Mismo color que los títulos de tabla */
+        color: white;
+        border: none;
+        border-radius: 5px;
+        padding: 10px 20px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        font-size: 14px;
+    }
+
+    .btn-primary:hover {
+        background-color: #5F0216;
+    }
+
+    .btn-secondary {
+        background-color: #3F0216;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        padding: 10px 20px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        font-size: 14px;
+    }
+
+    .btn-secondary:hover {
+        background-color: #5F0216;
+    }
+
+    .btn-danger {
+        background: none;
+        color: #dc3545;
+        border: none;
+        padding: 8px;
+        cursor: pointer;
+        transition: color 0.3s ease;
+        font-size: 16px;
+    }
+
+    .btn-danger:hover {
+        color: #c82333;
+        background-color: rgba(220, 53, 69, 0.1);
+        border-radius: 4px;
+    }
+
+    .btn-success {
+        background: none;
+        color: #28a745;
+        border: none;
+        padding: 8px;
+        cursor: pointer;
+        transition: color 0.3s ease;
+        font-size: 16px;
+    }
+
+    .btn-success:hover {
+        color: #218838;
+        background-color: rgba(40, 167, 69, 0.1);
+        border-radius: 4px;
+    }
+
+    /* Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        animation: fadeIn 0.3s ease;
+    }
+
+    .modal.show {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .modal-content {
+        background-color: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        max-width: 800px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+        animation: slideIn 0.3s ease;
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px 30px;
+        border-bottom: 1px solid #eee;
+        background-color: #3F0216;
+        color: white;
+        border-radius: 15px 15px 0 0;
+    }
+
+    .modal-header h2 {
+        margin: 0;
+        font-size: 24px;
+    }
+
+    .close {
+        color: white;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: color 0.3s ease;
+    }
+
+    .close:hover {
+        color: #ff6b6b;
+    }
+
+    .modal-body {
+        padding: 30px;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+        margin-bottom: 20px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 8px;
+        color: #333;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 12px;
+        font-size: 14px;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        transition: border-color 0.3s ease;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: #E91E63;
+    }
+
+    .image-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        border: 2px dashed #ddd;
+        border-radius: 10px;
+        padding: 20px;
+        background-color: #fafafa;
+        transition: border-color 0.3s ease;
+    }
+
+    .image-container:hover {
+        border-color: #E91E63;
+    }
+
+    .preview-container {
+        width: 200px;
+        height: 200px;
+        border: 2px solid #ddd;
+        border-radius: 10px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 15px;
+        background-color: white;
+        overflow: hidden;
+    }
+
+    .image-preview {
+        max-width: 100%;
+        max-height: 100%;
+        display: none;
+        border-radius: 8px;
+    }
+
+    .color-group {
+        margin-top: 20px;
+    }
+
+    .color-options {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    .color-option {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        background-color: #f9f9f9;
+        transition: background-color 0.3s ease;
+    }
+
+    .color-option:hover {
+        background-color: #f0f0f0;
+    }
+
+    .color-option input[type="checkbox"] {
+        width: auto;
+        margin: 0;
+    }
+
+    .modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 15px;
+        padding: 20px 30px;
+        border-top: 1px solid #eee;
+        background-color: #f9f9f9;
+        border-radius: 0 0 15px 15px;
+    }
+
+    /* Table Styles */
+    .table-container {
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        overflow: visible;
+    }
+
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 0;
+    }
+
+    .table th {
+        background-color: #3F0216;
+        color: white;
+        padding: 15px 12px;
+        text-align: center;
+        font-weight: bold;
+        border: none;
+    }
+
+    .table td {
+        padding: 12px;
+        text-align: center;
+        border-bottom: 1px solid #eee;
+        vertical-align: middle;
+    }
+
+    .table td:first-child {
+        position: relative;
+    }
+
+    .table tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+
+    .table img {
+        width: 40px;
+        height: 40px;
+        object-fit: cover;
+        border-radius: 5px;
+        border: 1px solid #ddd;
+        cursor: pointer;
+        transition: transform 0.3s ease;
+    }
+
+    .table img:hover {
+        transform: scale(4);
+        z-index: 1000;
+        position: absolute;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        border-radius: 8px;
+        background-color: white;
+        border: 2px solid #3F0216;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 5px;
+        justify-content: center;
+    }
+
+    .no-data {
+        text-align: center;
+        padding: 40px;
+        color: #666;
+        font-style: italic;
+    }
+
+    /* Pagination Styles */
+    .pagination-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px;
+        background-color: #f9f9f9;
+        border-top: 1px solid #eee;
+        border-radius: 0 0 10px 10px;
+    }
+
+    .pagination-info {
+        color: #666;
+        font-size: 14px;
+    }
+
+    .pagination-controls {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .per-page-selector {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .per-page-selector label {
+        font-size: 14px;
+        color: #666;
+        margin: 0;
+    }
+
+    .per-page-selector select {
+        padding: 5px 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 14px;
+        background-color: white;
+    }
+
+    .pagination-links {
+        display: flex;
+        gap: 5px;
+    }
+
+    .pagination-links a,
+    .pagination-links span {
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        text-decoration: none;
+        color: #3F0216;
+        font-size: 14px;
+        transition: all 0.3s ease;
+    }
+
+    .pagination-links a:hover {
+        background-color: #3F0216;
+        color: white;
+        border-color: #3F0216;
+    }
+
+    .pagination-links .current {
+        background-color: #3F0216;
+        color: white;
+        border-color: #3F0216;
+    }
+
+    .pagination-links .disabled {
+        color: #ccc;
+        cursor: not-allowed;
+        background-color: #f5f5f5;
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @keyframes slideIn {
+        from { 
+            opacity: 0;
+            transform: translateY(-50px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .search-filter-section {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .modal-content {
+            width: 95%;
+            margin: 10px;
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+
+        .pagination-container {
+            flex-direction: column;
+            gap: 15px;
+            text-align: center;
+        }
+
+        .pagination-controls {
+            flex-direction: column;
+            gap: 10px;
+        }
+    }
+</style>
+
+
+
+<div class="main-container">
+    <!-- Header Section -->
+    <div class="header-section">
+        <h1>📦 Gestión de Insumos</h1>
+        <button class="btn-primary" onclick="openModal()">
+            ➕ Nuevo Insumo
+        </button>
+    </div>
+
+    <!-- Search and Filter Section -->
+    <div class="search-filter-section">
+        <input type="text" class="search-input" id="searchInput" placeholder="🔍 Buscar por referencia, nombre o medida..." onkeyup="filterTable()">
+        <select class="filter-select" id="medidaFilter" onchange="filterTable()">
+            <option value="">Todas las medidas</option>
+            {% for medida in medidas %}
+            <option value="{{ medida.nombre }}">{{ medida.nombre }}</option>
+            {% endfor %}
+        </select>
+        <select class="filter-select" id="colorFilter" onchange="filterTable()">
+            <option value="">Todos los colores</option>
+            {% for color in colores %}
+            <option value="{{ color.nombre }}">{{ color.nombre }}</option>
+            {% endfor %}
+        </select>
+        <select class="filter-select" id="orderBySelect" onchange="changeOrderBy(this.value)">
+            <option value="referencia" {% if order_by == 'referencia' %}selected{% endif %}>Ordenar por Referencia</option>
+            <option value="nombre" {% if order_by == 'nombre' %}selected{% endif %}>Ordenar por Nombre</option>
+            <option value="medida" {% if order_by == 'medida' %}selected{% endif %}>Ordenar por Medida</option>
+        </select>
+    </div>
+
+    <!-- Table Container -->
+    <div class="table-container">
+        <table class="table" id="insumosTable">
+            <thead>
+                <tr>
+                    <th>Imagen</th>
+                    <th>Referencia</th>
+                    <th>Nombre</th>
+                    <th>Medida</th>
+                    <th>Colores</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for insumo in insumos_creados %}
+                <tr data-insumo-id="{{ insumo.id }}" data-reference="{{ insumo.referencia|lower }}" data-name="{{ insumo.nombre|lower }}" data-measure="{{ insumo.medida.nombre|lower }}" data-colors="{% for color in insumo.colores.all %}{{ color.nombre|lower }}{% if not forloop.last %},{% endif %}{% endfor %}">
+                    <td>
+                        {% if insumo.imagen_url %}
+                            <img src="/{{ insumo.imagen_url }}" alt="Imagen {{ insumo.nombre }}" title="{{ insumo.nombre }}">
+                        {% else %}
+                            <div style="width:40px; height:40px; background-color:#f0f0f0; border:1px solid #ddd; border-radius:5px; display:flex; align-items:center; justify-content:center; color:#999; font-size:12px;">Sin img</div>
+                        {% endif %}
+                    </td>
+                    <td><strong>{{ insumo.referencia }}</strong></td>
+                    <td>{{ insumo.nombre }}</td>
+                    <td>{{ insumo.medida.nombre }}</td>
+                    <td>
+                        {% for color in insumo.colores.all %}
+                            <span style="display:inline-block; background-color:#f0f0f0; padding:2px 8px; margin:1px; border-radius:12px; font-size:11px;">{{ color.nombre }}</span>
+                        {% endfor %}
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn-success" onclick="editInsumo({{ insumo.id }})" title="Editar">
+                                ✏️
+                            </button>
+                            <button class="btn-danger" onclick="deleteInsumo({{ insumo.id }}, '{{ insumo.nombre }}')" title="Eliminar">
+                                🗑️
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="no-data">
+                        📝 No hay insumos registrados aún. ¡Crea tu primer insumo!
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination Section -->
+    <div class="pagination-container">
+        <div class="pagination-info">
+            Mostrando {{ insumos_creados.start_index }} a {{ insumos_creados.end_index }} de {{ insumos_creados.paginator.count }} insumos
+        </div>
+        
+        <div class="pagination-controls">
+            <div class="per-page-selector">
+                <label for="perPageSelect">Mostrar:</label>
+                <select id="perPageSelect" onchange="changePerPage(this.value)">
+                    <option value="5" {% if per_page == '5' %}selected{% endif %}>5</option>
+                    <option value="10" {% if per_page == '10' %}selected{% endif %}>10</option>
+                    <option value="50" {% if per_page == '50' %}selected{% endif %}>50</option>
+                </select>
+            </div>
+            
+            {% if insumos_creados.has_other_pages %}
+            <div class="pagination-links">
+                {% if insumos_creados.has_previous %}
+                    <a href="?page=1&per_page={{ per_page }}&order_by={{ order_by }}">««</a>
+                    <a href="?page={{ insumos_creados.previous_page_number }}&per_page={{ per_page }}&order_by={{ order_by }}">«</a>
+                {% else %}
+                    <span class="disabled">««</span>
+                    <span class="disabled">«</span>
+                {% endif %}
+
+                {% for num in insumos_creados.paginator.page_range %}
+                    {% if insumos_creados.number == num %}
+                        <span class="current">{{ num }}</span>
+                    {% elif num > insumos_creados.number|add:'-3' and num < insumos_creados.number|add:'3' %}
+                        <a href="?page={{ num }}&per_page={{ per_page }}&order_by={{ order_by }}">{{ num }}</a>
+                    {% endif %}
+                {% endfor %}
+
+                {% if insumos_creados.has_next %}
+                    <a href="?page={{ insumos_creados.next_page_number }}&per_page={{ per_page }}&order_by={{ order_by }}">»</a>
+                    <a href="?page={{ insumos_creados.paginator.num_pages }}&per_page={{ per_page }}&order_by={{ order_by }}">»»</a>
+                {% else %}
+                    <span class="disabled">»</span>
+                    <span class="disabled">»»</span>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal para crear/editar insumo -->
+<div id="insumoModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modalTitle">➕ Nuevo Insumo</h2>
+            <span class="close" onclick="closeModal()">&times;</span>
+        </div>
+        
+        <form method="POST" enctype="multipart/form-data" id="insumoForm">
+            {% csrf_token %}
+            <input type="hidden" id="insumoId" name="insumo_id" value="">
+            <input type="hidden" id="formAction" name="action" value="guardar_formulario">
+            
+            <div class="modal-body">
+                <div class="form-grid">
+                    <!-- Columna 1: Imagen -->
+                    <div class="image-container">
+                        <div class="preview-container">
+                            <img id="imagePreview" class="image-preview" src="#" alt="Previsualización">
+                            <div id="noImageText" style="color: #999; text-align: center;">
+                                📷 Sin imagen seleccionada
+                            </div>
+                        </div>
+                        <button type="button" class="btn-secondary" onclick="document.getElementById('imagen').click()">
+                            📁 Seleccionar Imagen
+                        </button>
+                        <input type="file" id="imagen" name="imagen" accept="image/*" onchange="previewImage(event)" style="display: none;">
+                    </div>
+
+                    <!-- Columna 2: Formulario -->
+                    <div>
+                        <div class="form-group">
+                            <label for="nueva_referencia">Referencia *</label>
+                            <input type="text" id="nueva_referencia" name="nueva_referencia" placeholder="Ej: REF001" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="nuevo_nombre">Nombre *</label>
+                            <input type="text" id="nuevo_nombre" name="nuevo_nombre" placeholder="Ej: Tela Algodón" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="medida">Medida *</label>
+                            <select id="medida" name="medida" required>
+                                <option value="">Selecciona una medida</option>
+                                {% for medida in medidas %}
+                                <option value="{{ medida.id }}">{{ medida.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                            
+                            <!-- Agregar nueva medida -->
+                            <div style="margin-top: 10px; display: flex; gap: 10px;">
+                                <input type="text" id="nueva_medida" name="nueva_medida" placeholder="Nueva medida..." style="flex: 1;">
+                                <button type="button" class="btn-secondary" onclick="addNewMeasure()">➕</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Selección de colores -->
+                <div class="color-group">
+                    <label>Colores Disponibles</label>
+                    <div class="color-options">
+                        {% for color in colores %}
+                        <div class="color-option">
+                            <input type="checkbox" id="color_{{ color.id }}" name="colores" value="{{ color.id }}">
+                            <label for="color_{{ color.id }}">{{ color.nombre }}</label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Agregar nuevo color -->
+                    <div style="margin-top: 15px; display: flex; gap: 10px;">
+                        <input type="text" id="nuevo_color" name="nuevo_color" placeholder="Nuevo color..." style="flex: 1;">
+                        <button type="button" class="btn-secondary" onclick="addNewColor()">➕</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="closeModal()">Cancelar</button>
+                <button type="submit" class="btn-primary">💾 Guardar Insumo</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    // Modal functions
+    function openModal(insumoId = null) {
+        const modal = document.getElementById('insumoModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const form = document.getElementById('insumoForm');
+        
+        if (insumoId) {
+            modalTitle.textContent = '✏️ Editar Insumo';
+            // Don't reset form when editing - data will be loaded by editInsumo function
+        } else {
+            modalTitle.textContent = '➕ Nuevo Insumo';
+            // Reset form only when creating new insumo
+            form.reset();
+            document.getElementById('imagePreview').style.display = 'none';
+            document.getElementById('noImageText').style.display = 'block';
+            document.getElementById('formAction').value = 'guardar_formulario';
+            document.getElementById('insumoId').value = '';
+        }
+        
+        modal.classList.add('show');
+    }
+    
+    function closeModal() {
+        const modal = document.getElementById('insumoModal');
+        modal.classList.remove('show');
+    }
+    
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        const modal = document.getElementById('insumoModal');
+        if (event.target === modal) {
+            closeModal();
+        }
+    }
+    
+    // Image preview function
+    function previewImage(event) {
+        const file = event.target.files[0];
+        const preview = document.getElementById('imagePreview');
+        const noImageText = document.getElementById('noImageText');
+
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+                noImageText.style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        } else {
+            preview.src = '#';
+            preview.style.display = 'none';
+            noImageText.style.display = 'block';
+        }
+    }
+    
+    // Filter table function
+    function filterTable() {
+        const searchInput = document.getElementById('searchInput').value.toLowerCase();
+        const medidaFilter = document.getElementById('medidaFilter').value.toLowerCase();
+        const colorFilter = document.getElementById('colorFilter').value.toLowerCase();
+        const table = document.getElementById('insumosTable');
+        const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+
+        for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
+            const reference = row.getAttribute('data-reference') || '';
+            const name = row.getAttribute('data-name') || '';
+            const measure = row.getAttribute('data-measure') || '';
+            const colors = row.getAttribute('data-colors') || '';
+
+            const matchesSearch = reference.includes(searchInput) || 
+                                name.includes(searchInput) || 
+                                measure.includes(searchInput);
+            
+            const matchesMeasure = !medidaFilter || measure.includes(medidaFilter);
+            const matchesColor = !colorFilter || colors.includes(colorFilter);
+
+            if (matchesSearch && matchesMeasure && matchesColor) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        }
+    }
+    
+    // Add new measure function
+    function addNewMeasure() {
+        const newMeasureInput = document.getElementById('nueva_medida');
+        const newMeasure = newMeasureInput.value.trim();
+        
+        if (newMeasure) {
+            // Create a temporary form to submit the new measure
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.style.display = 'none';
+            
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrfmiddlewaretoken';
+            csrfInput.value = csrfToken;
+            
+            const actionInput = document.createElement('input');
+            actionInput.type = 'hidden';
+            actionInput.name = 'action';
+            actionInput.value = 'agregar_medida';
+            
+            const measureInput = document.createElement('input');
+            measureInput.type = 'hidden';
+            measureInput.name = 'nueva_medida';
+            measureInput.value = newMeasure;
+            
+            form.appendChild(csrfInput);
+            form.appendChild(actionInput);
+            form.appendChild(measureInput);
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+    
+    // Add new color function
+    function addNewColor() {
+        const newColorInput = document.getElementById('nuevo_color');
+        const newColor = newColorInput.value.trim();
+        
+        if (newColor) {
+            // Create a temporary form to submit the new color
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.style.display = 'none';
+            
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrfmiddlewaretoken';
+            csrfInput.value = csrfToken;
+            
+            const actionInput = document.createElement('input');
+            actionInput.type = 'hidden';
+            actionInput.name = 'action';
+            actionInput.value = 'agregar_color';
+            
+            const colorInput = document.createElement('input');
+            colorInput.type = 'hidden';
+            colorInput.name = 'nuevo_color';
+            colorInput.value = newColor;
+            
+            form.appendChild(csrfInput);
+            form.appendChild(actionInput);
+            form.appendChild(colorInput);
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+    
+    // Edit insumo function
+    function editInsumo(insumoId) {
+        // Set form action to edit
+        document.getElementById('formAction').value = 'editar_insumo';
+        document.getElementById('insumoId').value = insumoId;
+        
+        // Fetch insumo data via AJAX
+        fetch(`/insumos/data/${insumoId}/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert('Error: ' + data.error);
+                    return;
+                }
+                
+                // Load data into form fields
+                document.getElementById('nueva_referencia').value = data.referencia || '';
+                document.getElementById('nuevo_nombre').value = data.nombre || '';
+                document.getElementById('medida').value = data.medida_id || '';
+                
+                // Load image if exists
+                if (data.imagen_url) {
+                    const imagePreview = document.getElementById('imagePreview');
+                    const noImageText = document.getElementById('noImageText');
+                    imagePreview.src = '/' + data.imagen_url;
+                    imagePreview.style.display = 'block';
+                    noImageText.style.display = 'none';
+                }
+                
+                // Load colors
+                const colorCheckboxes = document.querySelectorAll('input[name="colores"]');
+                colorCheckboxes.forEach(checkbox => {
+                    checkbox.checked = data.colores.includes(parseInt(checkbox.value));
+                });
+                
+                // Open modal for editing
+                openModal(insumoId);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al cargar los datos del insumo');
+            });
+    }
+    
+    // Delete insumo function
+    function deleteInsumo(insumoId, insumoName) {
+        if (confirm(`¿Estás seguro de que quieres eliminar el insumo "${insumoName}"?`)) {
+            // Create a form to submit the delete action
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.style.display = 'none';
+            
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrfmiddlewaretoken';
+            csrfInput.value = csrfToken;
+            
+            const actionInput = document.createElement('input');
+            actionInput.type = 'hidden';
+            actionInput.name = 'action';
+            actionInput.value = 'eliminar_insumo';
+            
+            const insumoIdInput = document.createElement('input');
+            insumoIdInput.type = 'hidden';
+            insumoIdInput.name = 'insumo_id';
+            insumoIdInput.value = insumoId;
+            
+            form.appendChild(csrfInput);
+            form.appendChild(actionInput);
+            form.appendChild(insumoIdInput);
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+    
+    // Change per page function
+    function changePerPage(perPage) {
+        const url = new URL(window.location);
+        url.searchParams.set('per_page', perPage);
+        url.searchParams.set('page', '1'); // Reset to first page
+        window.location.href = url.toString();
+    }
+    
+    // Change order by function
+    function changeOrderBy(orderBy) {
+        const url = new URL(window.location);
+        url.searchParams.set('order_by', orderBy);
+        url.searchParams.set('page', '1'); // Reset to first page
+        window.location.href = url.toString();
+    }
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(event) {
+        // ESC key to close modal
+        if (event.key === 'Escape') {
+            closeModal();
+        }
+        
+        // Ctrl+N to create new insumo
+        if (event.ctrlKey && event.key === 'n') {
+            event.preventDefault();
+            openModal();
+        }
+    });
+</script>
+{% endblock %}

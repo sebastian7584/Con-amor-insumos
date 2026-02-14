@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block title %}Pagos — {{ manualista.nombre }}{% endblock %}
+
+{% block content %}
+<style>
+    .main-container { max-width: 1000px; margin: 0 auto; padding: 20px; }
+    .header-section { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding: 20px; background: #f9f9f9; border-radius: 10px; flex-wrap: wrap; gap: 15px; }
+    .header-section h1 { color: #3F0216; margin: 0; font-size: 22px; }
+    .btn-atras { background: #6c757d; color: white; text-decoration: none; padding: 10px 20px; border-radius: 8px; font-size: 14px; display: inline-block; }
+    .btn-atras:hover { color: white; background: #5a6268; }
+    .resumen { display: flex; gap: 25px; flex-wrap: wrap; margin-bottom: 25px; padding: 15px 20px; background: #f0f0f0; border-radius: 8px; }
+    .resumen span { font-weight: bold; }
+    .table-container { background: white; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); overflow: hidden; margin-bottom: 20px; }
+    .tabla { width: 100%; border-collapse: collapse; }
+    .tabla th, .tabla td { padding: 12px 14px; text-align: left; border-bottom: 1px solid #eee; }
+    .tabla th { background: #3F0216; color: white; font-weight: bold; }
+    .tabla .num { text-align: right; }
+    .tabla .sub-row td { padding-left: 30px; font-size: 13px; color: #555; background: #f8f9fa; }
+    .lista-pagos { margin: 6px 0 0 0; padding-left: 18px; }
+    .lista-pagos li { margin: 3px 0; }
+    .btn-pago { background: #28a745; color: white; border: none; padding: 6px 14px; border-radius: 5px; cursor: pointer; font-size: 13px; }
+    .btn-pago:hover { background: #218838; }
+    .btn-pago:disabled { background: #ccc; cursor: not-allowed; }
+    .form-pago { background: #eee; padding: 12px 20px; margin: 0; display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-end; }
+    .form-pago .campo { display: flex; flex-direction: column; min-width: 0; }
+    .form-pago .campo label { font-weight: bold; margin-bottom: 6px; font-size: 13px; color: #333; }
+    .form-pago .campo input { width: 100%; min-width: 120px; height: 38px; padding: 8px 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; box-sizing: border-box; }
+    .form-pago .campo-obs input { min-width: 220px; }
+    .form-pago .campo-btns { display: flex; gap: 10px; align-items: center; }
+    .sin-valor { color: #999; }
+    .pendiente-cero { color: #28a745; font-weight: bold; }
+</style>
+
+<div class="main-container">
+    <div class="header-section">
+        <div>
+            <a href="{% url 'pagos_manualistas' %}" class="btn-atras">← Atrás</a>
+        </div>
+        <h1>💰 {{ manualista.nombre }} — Detalle de órdenes y pagos</h1>
+    </div>
+
+    <div class="resumen">
+        <span>Total a pagar: ${{ total_a_pagar|floatformat:2 }}</span>
+        <span>Total pagado: ${{ total_pagado|floatformat:2 }}</span>
+        <span>Pendiente: {% if pendiente_total > 0 %}${{ pendiente_total|floatformat:2 }}{% else %}<span class="pendiente-cero">$0.00</span>{% endif %}</span>
+    </div>
+
+    <div class="table-container">
+        <table class="tabla">
+            <thead>
+                <tr>
+                    <th>Orden</th>
+                    <th>Fecha inicio</th>
+                    <th class="num">Valor a pagar</th>
+                    <th class="num">Pagado</th>
+                    <th class="num">Pendiente</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ord in ordenes %}
+                <tr>
+                    <td><strong>{{ ord.produccion.numero|default:ord.produccion.id }}</strong></td>
+                    <td>{{ ord.produccion.fecha_inicio|date:"d/m/Y" }}</td>
+                    <td class="num">{% if ord.valor_a_pagar %}${{ ord.valor_a_pagar|floatformat:2 }}{% else %}<span class="sin-valor">—</span>{% endif %}</td>
+                    <td class="num">${{ ord.total_pagado|floatformat:2 }}</td>
+                    <td class="num">{% if ord.pendiente > 0 %}${{ ord.pendiente|floatformat:2 }}{% else %}<span class="pendiente-cero">$0.00</span>{% endif %}</td>
+                    <td>
+                        {% if ord.valor_a_pagar > 0 and ord.pendiente > 0 %}
+                        <button type="button" class="btn-pago" onclick="toggleForm({{ ord.produccion.id }})">Registrar pago</button>
+                        {% else %}
+                        <span class="sin-valor">—</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% if ord.produccion.pagos.all %}
+                <tr class="sub-row">
+                    <td colspan="6">
+                        <strong>Pagos:</strong>
+                        <ul class="lista-pagos">
+                            {% for pago in ord.produccion.pagos.all %}
+                            <li>${{ pago.monto|floatformat:2 }} — {{ pago.fecha|date:"d/m/Y" }}{% if pago.observaciones %} — {{ pago.observaciones|truncatewords:10 }}{% endif %}</li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                </tr>
+                {% endif %}
+                <tr id="form-row-{{ ord.produccion.id }}" style="display: none;">
+                    <td colspan="6" style="padding: 0;">
+                        <form method="POST" class="form-pago">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="registrar_pago">
+                            <input type="hidden" name="produccion_id" value="{{ ord.produccion.id }}">
+                            <div class="campo">
+                                <label for="monto-{{ ord.produccion.id }}">Monto ($)</label>
+                                <input type="number" name="monto" id="monto-{{ ord.produccion.id }}" step="0.01" min="0.01" required placeholder="0.00">
+                            </div>
+                            <div class="campo">
+                                <label for="fecha-{{ ord.produccion.id }}">Fecha</label>
+                                <input type="date" name="fecha" id="fecha-{{ ord.produccion.id }}" required>
+                            </div>
+                            <div class="campo campo-obs">
+                                <label for="obs-{{ ord.produccion.id }}">Observaciones</label>
+                                <input type="text" name="observaciones" id="obs-{{ ord.produccion.id }}" placeholder="Opcional">
+                            </div>
+                            <div class="campo campo-btns">
+                                <label style="visibility: hidden;">Acción</label>
+                                <button type="submit" class="btn-pago">Guardar pago</button>
+                                <button type="button" style="background: #6c757d; color: white; border: none; padding: 6px 14px; border-radius: 5px; cursor: pointer;" onclick="toggleForm({{ ord.produccion.id }})">Cancelar</button>
+                            </div>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    function toggleForm(produccionId) {
+        var row = document.getElementById('form-row-' + produccionId);
+        if (!row) return;
+        if (row.style.display === 'none') {
+            row.style.display = 'table-row';
+            var today = new Date().toISOString().split('T')[0];
+            var fechaInput = document.getElementById('fecha-' + produccionId);
+            if (fechaInput && !fechaInput.value) fechaInput.value = today;
+        } else {
+            row.style.display = 'none';
+        }
+    }
+</script>
+{% endblock %}

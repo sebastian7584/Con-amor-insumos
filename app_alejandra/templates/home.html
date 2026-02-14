@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Inicio{% endblock %}
+
+{% block content %}
+<style>
+    /* Estilo para los botones del contenido principal */
+    .buttons-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr); /* 2 columnas */
+        gap: 5px; /* Espacio entre los botones */
+        justify-items: center;
+        align-items: center;
+        padding: 20px;
+    }
+    .buttons-grid button {
+        background-color: #EACADF;
+        color: white;
+        padding: 15px 30px;
+        font-size: 16px;
+        color: black;
+        border: 2px solid black;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        width: 40%;
+    }
+    .buttons-grid button:hover {
+        background-color: #5F0216;
+    }
+</style>
+<div class="buttons-grid">
+    <button onclick="location.href='/insumos/'">Insumos</button>
+    {% comment %} <button onclick="location.href='/medidas/'">Medidas</button> {% endcomment %}
+    {% comment %} <button onclick="location.href='/inventario/'">Inventario</button> {% endcomment %}
+    <button onclick="location.href='/clientes/'">Clientes</button>
+    {% comment %} <button onclick="location.href='/ventas/'">Ventas</button> {% endcomment %}
+    <button onclick="location.href='/productos/'">Productos</button>
+    {% comment %} <button onclick="location.href='/colores/'">Colores</button> {% endcomment %}
+    <button onclick="location.href='/proveedores/'">Proveedores</button>
+    <button onclick="location.href='/manualistas/'">Manualistas</button>
+    <button onclick="location.href='/compras/'">Compras</button>
+    <button onclick="location.href='/produccion/'">Produccion</button>
+    <button onclick="location.href='/ventas/'">Ventas</button>
+    <button onclick="location.href='/seguimiento-ventas/'">Seg. Ventas</button>
+    <button onclick="location.href='/seguimiento-produccion/'">Seg. Produccion</button>
+    <button onclick="location.href='/pagos-manualistas/'">Pagos manualistas</button>
+    <button onclick="location.href='/informes/'">Informes</button>
+    <button onclick="location.href='/importar-exportar/'">Importar / Exportar</button>
+</div>
+{% endblock %}

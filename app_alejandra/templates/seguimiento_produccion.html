@@ -1,0 +1,929 @@
+{% extends "base.html" %}
+{% block title %}Seguimiento de Producción{% endblock %}
+
+{% block content %}
+<style>
+    .main-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .header-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        padding: 20px;
+        background-color: #f9f9f9;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .header-section h1 {
+        color: #3F0216;
+        margin: 0;
+    }
+
+    /* Filtros Section */
+    .filters-section {
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .filters-row {
+        display: flex;
+        gap: 15px;
+        align-items: end;
+        flex-wrap: wrap;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        min-width: 150px;
+    }
+
+    .filter-group label {
+        font-weight: bold;
+        margin-bottom: 5px;
+        color: #333;
+        font-size: 14px;
+    }
+
+    .filter-group input,
+    .filter-group select {
+        padding: 8px 12px;
+        border: 2px solid #ddd;
+        border-radius: 5px;
+        font-size: 14px;
+        transition: border-color 0.3s ease;
+    }
+
+    .filter-group input:focus,
+    .filter-group select:focus {
+        outline: none;
+        border-color: #3F0216;
+    }
+
+    .btn-filter {
+        background-color: #3F0216;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        padding: 8px 16px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        font-size: 14px;
+        height: fit-content;
+    }
+
+    .btn-filter:hover {
+        background-color: #5F0216;
+    }
+
+    .btn-clear {
+        background-color: #6c757d;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        padding: 8px 16px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        font-size: 14px;
+        height: fit-content;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .btn-clear:hover {
+        background-color: #5a6268;
+        color: white;
+        text-decoration: none;
+    }
+
+    /* Producción Card */
+    .produccion-card {
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+        overflow: hidden;
+    }
+
+    .produccion-header {
+        background-color: #3F0216;
+        color: white;
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .produccion-header:hover {
+        background-color: #5F0216;
+    }
+
+    .produccion-info {
+        display: flex;
+        gap: 20px;
+        align-items: center;
+    }
+
+    .produccion-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .collapse-arrow {
+        font-size: 18px;
+        transition: transform 0.3s ease;
+        display: inline-block;
+    }
+
+    .collapse-arrow.collapsed {
+        transform: rotate(0deg);
+    }
+
+    .collapse-arrow:not(.collapsed) {
+        transform: rotate(90deg);
+    }
+
+    .estado-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+
+    .estado-pendiente {
+        background-color: #ffc107;
+        color: #000;
+    }
+
+    .estado-proceso {
+        background-color: #17a2b8;
+        color: white;
+    }
+
+    .estado-terminado {
+        background-color: #28a745;
+        color: white;
+    }
+
+    .produccion-body {
+        padding: 20px;
+        display: block;
+        transition: all 0.3s ease;
+    }
+
+    .produccion-body.collapsed {
+        display: none;
+    }
+
+    .lineas-container {
+        display: grid;
+        gap: 15px;
+    }
+
+    .linea-item {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 15px;
+        background-color: #f8f9fa;
+    }
+
+    .linea-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+    .linea-info {
+        display: flex;
+        gap: 15px;
+        align-items: center;
+    }
+
+    .progress-container {
+        flex: 1;
+        margin: 0 15px;
+    }
+
+    .progress-bar {
+        width: 100%;
+        height: 20px;
+        background-color: #e9ecef;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background-color: #28a745;
+        transition: width 0.3s ease;
+    }
+
+    .progress-text {
+        text-align: center;
+        font-size: 12px;
+        margin-top: 5px;
+        color: #666;
+    }
+
+    .btn-primary {
+        background-color: #3F0216;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        padding: 8px 16px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        font-size: 14px;
+    }
+
+    .btn-primary:hover {
+        background-color: #5F0216;
+    }
+
+    .btn-success {
+        background-color: #28a745;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        padding: 8px 16px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        font-size: 14px;
+    }
+
+    .btn-success:hover {
+        background-color: #218838;
+    }
+
+    .btn-info {
+        background-color: #17a2b8;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        padding: 6px 12px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        font-size: 12px;
+    }
+
+    .btn-info:hover {
+        background-color: #138496;
+    }
+
+    /* Paginación */
+    .pagination-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 30px;
+        padding: 20px;
+        background-color: #f9f9f9;
+        border-radius: 10px;
+    }
+
+    .pagination-info {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .per-page-selector {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .per-page-selector select {
+        padding: 5px 10px;
+        border: 2px solid #ddd;
+        border-radius: 5px;
+        font-size: 14px;
+    }
+
+    .pagination {
+        display: flex;
+        gap: 5px;
+        align-items: center;
+    }
+
+    .pagination a,
+    .pagination span {
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        text-decoration: none;
+        color: #333;
+        transition: all 0.3s ease;
+    }
+
+    .pagination a:hover {
+        background-color: #3F0216;
+        color: white;
+        border-color: #3F0216;
+    }
+
+    .pagination .current {
+        background-color: #3F0216;
+        color: white;
+        border-color: #3F0216;
+    }
+
+    /* Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        animation: fadeIn 0.3s ease;
+    }
+
+    .modal.show {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .modal-content {
+        background-color: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        max-width: 500px;
+        width: 90%;
+        animation: slideIn 0.3s ease;
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px 30px;
+        border-bottom: 1px solid #eee;
+        background-color: #3F0216;
+        color: white;
+        border-radius: 15px 15px 0 0;
+    }
+
+    .modal-header h2 {
+        margin: 0;
+        font-size: 20px;
+    }
+
+    .close {
+        color: white;
+        font-size: 24px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: color 0.3s ease;
+    }
+
+    .close:hover {
+        color: #ff6b6b;
+    }
+
+    .modal-body {
+        padding: 30px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 8px;
+        color: #333;
+    }
+
+    .form-group input,
+    .form-group textarea {
+        width: 100%;
+        padding: 12px;
+        font-size: 14px;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        transition: border-color 0.3s ease;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: #3F0216;
+    }
+
+    .modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 15px;
+        padding: 20px 30px;
+        border-top: 1px solid #eee;
+        background-color: #f9f9f9;
+        border-radius: 0 0 15px 15px;
+    }
+
+    .entregas-history {
+        margin-top: 15px;
+        padding: 10px;
+        background-color: white;
+        border-radius: 5px;
+        border: 1px solid #ddd;
+    }
+
+    .entrega-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 5px 0;
+        border-bottom: 1px solid #eee;
+    }
+
+    .entrega-item:last-child {
+        border-bottom: none;
+    }
+
+    .entrega-fecha {
+        font-size: 12px;
+        color: #666;
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @keyframes slideIn {
+        from { 
+            opacity: 0;
+            transform: translateY(-50px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .filters-row {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .filter-group {
+            min-width: auto;
+        }
+        
+        .produccion-info {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        
+        .linea-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        
+        .progress-container {
+            margin: 10px 0;
+        }
+        
+        .pagination-section {
+            flex-direction: column;
+            gap: 15px;
+        }
+    }
+</style>
+
+<div class="main-container">
+    <!-- Header Section -->
+    <div class="header-section">
+        <h1>📊 Seguimiento de Producción</h1>
+    </div>
+
+    <!-- Filtros Section -->
+    <div class="filters-section">
+        <form method="GET" id="filtersForm">
+            <div class="filters-row">
+                <div class="filter-group">
+                    <label for="search">🔍 Buscar por ID:</label>
+                    <input type="text" name="search" id="search" value="{{ search_query }}" placeholder="Ej: 123">
+                </div>
+                
+                <div class="filter-group">
+                    <label for="estado">📊 Estado:</label>
+                    <select name="estado" id="estado">
+                        {% for value, label in estados %}
+                        <option value="{{ value }}" {% if value == estado_filter %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="manualista">👤 Manualista:</label>
+                    <select name="manualista" id="manualista">
+                        <option value="">Todos los manualistas</option>
+                        {% for manualista in manualistas %}
+                        <option value="{{ manualista.id }}" {% if manualista.id|stringformat:"s" == manualista_filter %}selected{% endif %}>
+                            {{ manualista.nombre }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <button type="submit" class="btn-filter">🔍 Filtrar</button>
+                <a href="{% url 'seguimiento_produccion' %}" class="btn-clear">🗑️ Limpiar</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Producciones -->
+    {% for produccion in producciones %}
+    <div class="produccion-card" {% if produccion.estado == 'Terminado' %}style="border-left: 4px solid #28a745;"{% endif %}>
+        <div class="produccion-header" onclick="toggleProduccion({{ produccion.id }})">
+            <div class="produccion-info">
+                <div class="produccion-title">
+                    <span class="collapse-arrow collapsed" id="arrow-{{ produccion.id }}">▶</span>
+                    <h3>Orden {{ produccion.numero|default:produccion.id }}</h3>
+                    <span class="estado-badge estado-{{ produccion.estado|lower|cut:' ' }}">
+                        {{ produccion.estado }}
+                    </span>
+                    {% if produccion.estado == 'Terminado' %}
+                        <span style="color: #28a745; font-weight: bold; font-size: 12px;">✅ COMPLETADA</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div style="text-align: right;">
+                <strong>{{ produccion.manualista.nombre }}</strong>
+                <div style="font-size: 12px; color: #ccc; margin-top: 2px;">
+                    {{ produccion.lineas.count }} producto{{ produccion.lineas.count|pluralize }}
+                </div>
+            </div>
+        </div>
+
+        <div class="produccion-body collapsed" id="body-{{ produccion.id }}">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 20px; color: #666; font-size: 14px;">
+                <span>📅 Inicio: {{ produccion.fecha_inicio }}</span>
+                <span>📅 Tentativa: {{ produccion.fecha_tentativa }}</span>
+            </div>
+
+            <div class="lineas-container">
+                {% for linea in produccion.lineas.all %}
+                <div class="linea-item" {% if linea.cantidad_pendiente == 0 %}style="border-left: 4px solid #28a745;"{% endif %}>
+                    <div class="linea-header">
+                        <div class="linea-info">
+                            <strong>{{ linea.producto.nombre }}</strong>
+                            <span style="color: #666;">({{ linea.color.nombre }})</span>
+                            <span style="background-color: {% if linea.cantidad_pendiente == 0 %}#d4edda{% else %}#e9ecef{% endif %}; padding: 2px 8px; border-radius: 4px; font-size: 12px;">
+                                {{ linea.cantidad_entregada }}/{{ linea.cantidad }}
+                            </span>
+                            {% if linea.cantidad_pendiente == 0 %}
+                                <span style="color: #28a745; font-weight: bold; font-size: 12px;">✅ COMPLETADO</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="progress-container">
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: {{ linea.porcentaje_completado }}%"></div>
+                            </div>
+                            <div class="progress-text">{{ linea.porcentaje_completado }}% completado</div>
+                        </div>
+
+                        <div>
+                            {% if linea.cantidad_pendiente > 0 %}
+                                <button class="btn-info" onclick="abrirModalEntrega({{ linea.id }}, '{{ linea.producto.nombre }}', {{ linea.cantidad_pendiente }})">
+                                    📦 Entregar
+                                </button>
+                            {% else %}
+                                <span style="color: #28a745; font-weight: bold;">✅ Completado</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Historial de entregas -->
+                    {% if linea.entregas_parciales.all %}
+                    <div class="entregas-history">
+                        <strong style="font-size: 12px; color: #666;">📋 Historial de entregas:</strong>
+                        {% for entrega in linea.entregas_parciales.all %}
+                        <div class="entrega-item">
+                            <span>{{ entrega.cantidad_entregada }} unidades</span>
+                            <span class="entrega-fecha">{{ entrega.fecha_entrega|date:"d/m/Y H:i" }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Ajustes de insumos -->
+            <div class="ajustes-insumos-section" style="margin-top: 20px; padding: 15px; background-color: #f0f4f8; border-radius: 8px; border: 1px solid #ddd;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <strong style="color: #3F0216;">📦 Ajustes de insumos</strong>
+                    <button type="button" class="btn-info" onclick="abrirModalAjuste({{ produccion.id }})">
+                        + Registrar ajuste
+                    </button>
+                </div>
+                {% if produccion.ajustes_insumos.all %}
+                <div class="ajustes-list" style="margin-top: 10px;">
+                    <table style="width: 100%; font-size: 13px; border-collapse: collapse;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid #3F0216; color: #3F0216;">
+                                <th style="text-align: left; padding: 6px 8px;">Insumo</th>
+                                <th style="text-align: left; padding: 6px 8px;">Tipo</th>
+                                <th style="text-align: right; padding: 6px 8px;">Cantidad</th>
+                                <th style="text-align: left; padding: 6px 8px;">Fecha</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for a in produccion.ajustes_insumos.all %}
+                            <tr style="border-bottom: 1px solid #eee;">
+                                <td style="padding: 6px 8px;">{{ a.insumo.nombre }} ({{ a.color.nombre }})</td>
+                                <td style="padding: 6px 8px;">
+                                    {% if a.tipo == 'envio_extra' %}
+                                        <span style="color: #0d6efd;">Se envían más</span>
+                                    {% else %}
+                                        <span style="color: #856404;">Sobran</span>
+                                    {% endif %}
+                                </td>
+                                <td style="text-align: right; padding: 6px 8px;">{{ a.cantidad }}</td>
+                                <td style="padding: 6px 8px;">{{ a.fecha|date:"d/m/Y H:i" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p style="margin: 0; color: #666; font-size: 13px;">Sin ajustes registrados. Use "Registrar ajuste" si se envían más insumos al manualista o si sobran.</p>
+                {% endif %}
+            </div>
+
+            <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <a href="{% url 'orden_fabricante' produccion.id %}" target="_blank" class="btn-info" style="text-decoration: none; display: inline-block;">
+                    📄 Vista para fabricante (PDF)
+                </a>
+                {% if produccion.estado != 'Terminado' %}
+                <form method="POST" style="display: inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="marcar_terminado">
+                    <input type="hidden" name="produccion_id" value="{{ produccion.id }}">
+                    <button type="submit" class="btn-success" onclick="return confirm('¿Marcar esta producción como terminada?')">
+                        ✅ Marcar como Terminado
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="produccion-card">
+        <div class="produccion-body" style="text-align: center; padding: 40px;">
+            <h3 style="color: #666;">📝 No hay producciones registradas</h3>
+            <p style="color: #999;">Las producciones aparecerán aquí cuando se creen.</p>
+        </div>
+    </div>
+    {% endfor %}
+
+    <!-- Paginación -->
+    {% if producciones.has_other_pages %}
+    <div class="pagination-section">
+        <div class="pagination-info">
+            <span>Mostrando {{ producciones.start_index }} - {{ producciones.end_index }} de {{ producciones.paginator.count }} producciones</span>
+            
+            <div class="per-page-selector">
+                <label for="perPageSelect">Por página:</label>
+                <select id="perPageSelect" onchange="changePerPage(this.value)">
+                    <option value="5" {% if per_page == 5 %}selected{% endif %}>5</option>
+                    <option value="10" {% if per_page == 10 %}selected{% endif %}>10</option>
+                    <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="pagination">
+            {% if producciones.has_previous %}
+                <a href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if estado_filter %}&estado={{ estado_filter }}{% endif %}{% if manualista_filter %}&manualista={{ manualista_filter }}{% endif %}&per_page={{ per_page }}">« Primera</a>
+                <a href="?page={{ producciones.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if estado_filter %}&estado={{ estado_filter }}{% endif %}{% if manualista_filter %}&manualista={{ manualista_filter }}{% endif %}&per_page={{ per_page }}">‹ Anterior</a>
+            {% endif %}
+
+            {% for num in producciones.paginator.page_range %}
+                {% if num == producciones.number %}
+                    <span class="current">{{ num }}</span>
+                {% elif num > producciones.number|add:'-3' and num < producciones.number|add:'3' %}
+                    <a href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if estado_filter %}&estado={{ estado_filter }}{% endif %}{% if manualista_filter %}&manualista={{ manualista_filter }}{% endif %}&per_page={{ per_page }}">{{ num }}</a>
+                {% endif %}
+            {% endfor %}
+
+            {% if producciones.has_next %}
+                <a href="?page={{ producciones.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if estado_filter %}&estado={{ estado_filter }}{% endif %}{% if manualista_filter %}&manualista={{ manualista_filter }}{% endif %}&per_page={{ per_page }}">Siguiente ›</a>
+                <a href="?page={{ producciones.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if estado_filter %}&estado={{ estado_filter }}{% endif %}{% if manualista_filter %}&manualista={{ manualista_filter }}{% endif %}&per_page={{ per_page }}">Última »</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{{ insumos_por_produccion|json_script:"insumos-por-produccion" }}
+
+<!-- Modal para registrar ajuste de insumos -->
+<div id="ajusteModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>📦 Ajuste de insumos</h2>
+            <span class="close" onclick="cerrarModalAjuste()">&times;</span>
+        </div>
+        <form method="POST" id="ajusteForm">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="registrar_ajuste">
+            <input type="hidden" name="produccion_id" id="ajusteProduccionId">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="ajusteInsumoColor">Insumo (y color) de la orden:</label>
+                    <select name="insumo_color" id="ajusteInsumoColor" required>
+                        <option value="">-- Seleccione insumo --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Tipo de ajuste:</label>
+                    <select name="tipo" required>
+                        <option value="envio_extra">Se envían más insumos</option>
+                        <option value="sobrante">Sobran insumos</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="ajusteCantidad">Cantidad:</label>
+                    <input type="number" name="cantidad" id="ajusteCantidad" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="ajusteObservaciones">Observaciones (opcional):</label>
+                    <textarea name="observaciones" id="ajusteObservaciones" rows="2"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-primary" onclick="cerrarModalAjuste()">Cancelar</button>
+                <button type="submit" class="btn-success">Registrar ajuste</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal para registrar entrega -->
+<div id="entregaModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>📦 Registrar Entrega Parcial</h2>
+            <span class="close" onclick="cerrarModalEntrega()">&times;</span>
+        </div>
+        
+        <form method="POST" id="entregaForm">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="registrar_entrega">
+            <input type="hidden" name="linea_id" id="lineaId">
+            
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Producto:</label>
+                    <input type="text" id="productoNombre" readonly style="background-color: #f8f9fa;">
+                </div>
+                
+                <div class="form-group">
+                    <label for="cantidadEntregada">Cantidad a entregar:</label>
+                    <input type="number" name="cantidad_entregada" id="cantidadEntregada" min="1" required>
+                    <small style="color: #666;">Máximo: <span id="cantidadMaxima">0</span> unidades</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="observaciones">Observaciones (opcional):</label>
+                    <textarea name="observaciones" id="observaciones" rows="3" placeholder="Ej: Productos con pequeños defectos, entregados en buen estado, etc."></textarea>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn-primary" onclick="cerrarModalEntrega()">Cancelar</button>
+                <button type="submit" class="btn-success">📦 Registrar Entrega</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Toggle producción collapse
+    function toggleProduccion(produccionId) {
+        const body = document.getElementById(`body-${produccionId}`);
+        const arrow = document.getElementById(`arrow-${produccionId}`);
+        
+        if (body.classList.contains('collapsed')) {
+            // Expandir
+            body.classList.remove('collapsed');
+            arrow.classList.remove('collapsed');
+            arrow.textContent = '▼';
+        } else {
+            // Colapsar
+            body.classList.add('collapsed');
+            arrow.classList.add('collapsed');
+            arrow.textContent = '▶';
+        }
+    }
+
+    // Modal functions
+    function abrirModalEntrega(lineaId, productoNombre, cantidadMaxima) {
+        document.getElementById('lineaId').value = lineaId;
+        document.getElementById('productoNombre').value = productoNombre;
+        document.getElementById('cantidadMaxima').textContent = cantidadMaxima;
+        document.getElementById('cantidadEntregada').max = cantidadMaxima;
+        document.getElementById('cantidadEntregada').value = '';
+        document.getElementById('observaciones').value = '';
+        
+        document.getElementById('entregaModal').classList.add('show');
+    }
+
+    function cerrarModalEntrega() {
+        document.getElementById('entregaModal').classList.remove('show');
+    }
+
+    // Modal Ajuste de insumos
+    function abrirModalAjuste(produccionId) {
+        const el = document.getElementById('insumos-por-produccion');
+        const data = el ? JSON.parse(el.textContent) : {};
+        const opciones = data[String(produccionId)] || data[produccionId] || [];
+        const select = document.getElementById('ajusteInsumoColor');
+        select.innerHTML = '<option value="">-- Seleccione insumo --</option>';
+        opciones.forEach(function(o) {
+            const opt = document.createElement('option');
+            opt.value = o.insumo_id + ',' + o.color_id;
+            opt.textContent = o.label;
+            select.appendChild(opt);
+        });
+        document.getElementById('ajusteProduccionId').value = produccionId;
+        document.getElementById('ajusteCantidad').value = '';
+        document.getElementById('ajusteObservaciones').value = '';
+        document.getElementById('ajusteModal').classList.add('show');
+    }
+    function cerrarModalAjuste() {
+        document.getElementById('ajusteModal').classList.remove('show');
+    }
+
+    // Cerrar modal al hacer clic fuera
+    window.onclick = function(event) {
+        const modalEntrega = document.getElementById('entregaModal');
+        const modalAjuste = document.getElementById('ajusteModal');
+        if (event.target === modalEntrega) cerrarModalEntrega();
+        if (event.target === modalAjuste) cerrarModalAjuste();
+    }
+
+    // Validación del formulario
+    document.getElementById('entregaForm').addEventListener('submit', function(e) {
+        const cantidad = parseInt(document.getElementById('cantidadEntregada').value);
+        const maximo = parseInt(document.getElementById('cantidadMaxima').textContent);
+        
+        if (cantidad > maximo) {
+            e.preventDefault();
+            alert(`La cantidad no puede exceder ${maximo} unidades.`);
+            return false;
+        }
+        
+        if (cantidad <= 0) {
+            e.preventDefault();
+            alert('La cantidad debe ser mayor a 0.');
+            return false;
+        }
+    });
+
+    // Cambiar elementos por página
+    function changePerPage(perPage) {
+        const url = new URL(window.location);
+        url.searchParams.set('per_page', perPage);
+        url.searchParams.set('page', '1'); // Reset to first page
+        window.location.href = url.toString();
+    }
+
+    // Auto-submit filtros al cambiar
+    document.getElementById('estado').addEventListener('change', function() {
+        document.getElementById('filtersForm').submit();
+    });
+
+    document.getElementById('manualista').addEventListener('change', function() {
+        document.getElementById('filtersForm').submit();
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+
+{% block title %}Compras{% endblock %}
+
+{% block content %}
+<style>
+    .form-container {
+        max-width: 800px;
+        margin: 20px auto;
+        padding: 20px;
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        text-align: center;
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+        text-align: left;
+    }
+
+    .form-group select, .form-group input {
+        width: 100%;
+        padding: 10px;
+        font-size: 14px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+    }
+
+    .table-container {
+        margin-top: 20px;
+        overflow-x: auto;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+    }
+
+    th, td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+    }
+
+    th {
+        background: #3F0216;
+        color: white;
+    }
+
+    .delete-btn {
+        background: #E74C3C;
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+    }
+
+    .delete-btn:hover {
+        background: #C0392B;
+    }
+</style>
+
+<div class="form-container">
+    <h2>Registrar Compra</h2>
+
+    <form method="POST">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="proveedor">Seleccionar Proveedor</label>
+            <select name="proveedor" required>
+                {% for proveedor in proveedores %}
+                <option value="{{ proveedor.id }}">{{ proveedor.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <h3>Insumos</h3>
+        <table id="compras-table">
+            <thead>
+                <tr>
+                    <th>Insumo</th>
+                    <th>Color</th>
+                    <th>Cantidad</th>
+                    <th>Medida</th>
+                    <th>Valor</th>
+                    <th>Total</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+        <button type="button" onclick="agregarFila()">+ Agregar Insumo</button>
+
+        <h3>Total General: <span id="total-general">0.00</span></h3>
+
+        <div class="form-group">
+            <button type="submit">Registrar Compra</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    const insumos = JSON.parse('{{ insumos_json|safe }}');
+    const medidas = JSON.parse('{{ medidas_json|safe }}');
+    const colores = JSON.parse('{{ colores_json|safe }}');
+    const precios = JSON.parse('{{ precios_anteriores|safe }}');
+
+    function actualizarFila(select) {
+        const row = select.parentElement.parentElement;
+        const insumoId = select.value;
+    
+        // Actualiza medida
+        const medida = medidas[insumos.find(i => i.id == insumoId)?.medida_id] || "-";
+        row.querySelector(".medida-cell").textContent = medida;
+    
+        // Actualiza colores
+        const colorSelect = row.querySelector(".color-select");
+        colorSelect.innerHTML = colores[insumoId]?.map(c => `<option value="${c.id}">${c.nombre}</option>`).join("") || "";
+    
+        // Buscar proveedor seleccionado
+        const proveedorId = document.querySelector("select[name='proveedor']").value;
+        const precioKey = `${proveedorId}_${insumoId}`;
+        const precioAnterior = precios[precioKey];
+    
+        // Si existe valor previo, ponerlo en el input
+        if (precioAnterior !== undefined) {
+            row.querySelector(".valor-input").value = precioAnterior;
+            calcularTotal(row);  // Actualizar el total con ese valor
+        }
+    }
+
+    function calcularTotal(row) {
+        const cantidad = parseFloat(row.querySelector(".cantidad-input").value || 0);
+        const valor = parseFloat(row.querySelector(".valor-input").value || 0);
+        const total = cantidad * valor;
+    
+        // Formato con separador de miles y decimales con coma
+        const formateador = new Intl.NumberFormat('es-CO', {
+            style: 'currency',
+            currency: 'COP',
+            minimumFractionDigits: 2
+        });
+    
+        row.querySelector(".total-cell").textContent = formateador.format(total);
+        actualizarTotalGeneral();
+    }
+
+    function actualizarTotalGeneral() {
+        let total = 0;
+        document.querySelectorAll(".total-cell").forEach(cell => {
+            const valor = parseFloat(cell.textContent.replace(/[^\d,.-]/g, '').replace('.', '').replace(',', '.')) || 0;
+            total += valor;
+        });
+    
+        const formateador = new Intl.NumberFormat('es-CO', {
+            style: 'currency',
+            currency: 'COP',
+            minimumFractionDigits: 2
+        });
+    
+        document.getElementById("total-general").textContent = formateador.format(total);
+    }
+
+    function agregarFila() {
+        const table = document.querySelector("#compras-table tbody");
+        const row = document.createElement("tr");
+        row.innerHTML = `
+            <td>
+                <select name="insumo_id[]" onchange="actualizarFila(this)">
+                    <option value="">-- Seleccionar --</option>
+                    ${insumos.map(i => `<option value="${i.id}">${i.nombre}</option>`).join("")}
+                </select>
+            </td>
+            <td>
+                <select name="color_id[]" class="color-select">
+                    <option value="">-- Seleccionar --</option>
+                </select>
+            </td>
+            <td>
+                <input type="number" name="cantidad[]" class="cantidad-input" oninput="calcularTotal(this.parentElement.parentElement)" min="1">
+            </td>
+            <td class="medida-cell">-</td>
+            <td>
+                <input type="number" name="valor_unitario[]" class="valor-input" oninput="calcularTotal(this.parentElement.parentElement)" min="0">
+            </td>
+            <td class="total-cell">$0.00</td>
+            <td>
+                <button type="button" class="delete-btn" onclick="this.parentElement.parentElement.remove(); actualizarTotalGeneral();">❌</button>
+            </td>`;
+        table.appendChild(row);
+    }
+</script>
+
+{% endblock %}

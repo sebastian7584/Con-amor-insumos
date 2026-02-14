@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orden para fabricante {{ produccion.numero|default:produccion.id }}</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; color: #333; max-width: 900px; margin-left: auto; margin-right: auto; }
+        .no-print { margin-bottom: 20px; }
+        .btn-pdf { background: #3F0216; color: white; border: none; padding: 12px 24px; font-size: 16px; border-radius: 8px; cursor: pointer; }
+        .btn-pdf:hover { background: #5F0216; }
+        .btn-back { background: #6c757d; color: white; text-decoration: none; padding: 10px 20px; border-radius: 8px; display: inline-block; margin-right: 10px; }
+        .btn-back:hover { color: white; }
+        h1 { color: #3F0216; border-bottom: 2px solid #3F0216; padding-bottom: 10px; }
+        .meta { display: flex; flex-wrap: wrap; gap: 20px; margin: 20px 0; padding: 15px; background: #f5f5f5; border-radius: 8px; }
+        .meta span { font-weight: bold; }
+        .bloque-producto { margin: 25px 0; padding: 20px; border: 1px solid #ddd; border-radius: 10px; page-break-inside: avoid; }
+        .bloque-producto h2 { margin-top: 0; color: #3F0216; font-size: 18px; }
+        .producto-cabecera { display: flex; gap: 20px; align-items: flex-start; margin-bottom: 15px; }
+        .producto-img { width: 120px; height: 120px; object-fit: contain; border: 1px solid #ddd; border-radius: 8px; background: #fff; }
+        .producto-info { flex: 1; }
+        .producto-info p { margin: 4px 0; }
+        table.tabla-insumos { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+        table.tabla-insumos th, table.tabla-insumos td { border: 1px solid #ddd; padding: 8px 10px; text-align: left; }
+        table.tabla-insumos th { background: #3F0216; color: white; }
+        table.tabla-insumos tr:nth-child(even) { background: #f9f9f9; }
+        .img-insumo { width: 50px; height: 50px; object-fit: contain; border: 1px solid #eee; border-radius: 4px; vertical-align: middle; }
+        .resumen { margin-top: 30px; padding: 20px; background: #f0f0f0; border-radius: 10px; page-break-inside: avoid; }
+        .resumen h2 { margin-top: 0; color: #3F0216; }
+        @media print {
+            body { margin: 0; }
+            .no-print { display: none !important; }
+            .bloque-producto { break-inside: avoid; }
+            .resumen { break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+    <div class="no-print">
+        <a href="{% url 'seguimiento_produccion' %}" class="btn-back">← Volver a Seg. Producción</a>
+        <button type="button" class="btn-pdf" onclick="window.print();">📄 Descargar / Imprimir como PDF</button>
+    </div>
+
+    <h1>Orden para fabricante {{ produccion.numero|default:produccion.id }}</h1>
+    <div class="meta">
+        <p><span>Manualista:</span> {{ produccion.manualista.nombre }}</p>
+        <p><span>Fecha inicio:</span> {{ produccion.fecha_inicio|date:"d/m/Y" }}</p>
+        <p><span>Fecha tentativa:</span> {{ produccion.fecha_tentativa|date:"d/m/Y" }}</p>
+        <p><span>Estado:</span> {{ produccion.estado }}</p>
+    </div>
+
+    <h2 style="color: #3F0216;">Productos a fabricar</h2>
+    {% for item in lineas_detalle %}
+    <div class="bloque-producto">
+        <h2>{{ item.producto.nombre }} — {{ item.producto.referencia }}</h2>
+        <div class="producto-cabecera">
+            {% if item.producto.imagen %}
+            <img src="{{ item.producto.imagen.url }}" alt="{{ item.producto.nombre }}" class="producto-img">
+            {% else %}
+            <div class="producto-img" style="display: flex; align-items: center; justify-content: center; color: #999; font-size: 12px;">Sin imagen</div>
+            {% endif %}
+            <div class="producto-info">
+                <p><strong>Color:</strong> {{ item.linea.color.nombre }}</p>
+                <p><strong>Cantidad a fabricar:</strong> {{ item.linea.cantidad }} unidades</p>
+            </div>
+        </div>
+        <p><strong>Materiales que lleva este producto:</strong></p>
+        <table class="tabla-insumos">
+            <thead>
+                <tr>
+                    <th>Insumo</th>
+                    <th>Cant. por unidad</th>
+                    <th>Cant. total</th>
+                    <th>Unidad</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ins in item.insumos %}
+                <tr>
+                    <td>
+                        {% if ins.insumo.imagen_url %}
+                        <img src="/{{ ins.insumo.imagen_url }}" alt="" class="img-insumo" style="margin-right: 8px;">
+                        {% endif %}
+                        {{ ins.insumo.nombre }}{% if ins.insumo.referencia %} — {{ ins.insumo.referencia }}{% endif %}
+                    </td>
+                    <td>{{ ins.cantidad_por_unidad }}</td>
+                    <td>{{ ins.cantidad_total }}</td>
+                    <td>{{ ins.medida_nombre }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4">Sin insumos definidos.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endfor %}
+
+    <div class="resumen">
+        <h2>Resumen total de insumos a enviar</h2>
+        <p>Totales agregados de todos los productos de esta orden:</p>
+        <table class="tabla-insumos">
+            <thead>
+                <tr>
+                    <th>Insumo</th>
+                    <th>Cantidad total</th>
+                    <th>Unidad</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in resumen_insumos %}
+                <tr>
+                    <td>{{ r.insumo.nombre }}{% if r.insumo.referencia %} — {{ r.insumo.referencia }}{% endif %}</td>
+                    <td>{{ r.cantidad_total }}</td>
+                    <td>{{ r.medida_nombre }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="3">No hay insumos en esta orden.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <p style="margin-top: 30px; font-size: 12px; color: #666;">Documento generado para el fabricante. Orden {{ produccion.numero|default:produccion.id }}.</p>
+</body>
+</html>

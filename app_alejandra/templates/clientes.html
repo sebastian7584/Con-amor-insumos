@@ -1,0 +1,754 @@
+{% extends "base.html" %}
+
+{% block title %}Clientes{% endblock %}
+
+{% block content %}
+<style>
+    /* Estilo general */
+    .main-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .header-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        padding: 20px;
+        background-color: #f9f9f9;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .header-section h1 {
+        color: #3F0216;
+        margin: 0;
+    }
+
+    .search-filter-section {
+        display: flex;
+        gap: 15px;
+        align-items: center;
+        margin-bottom: 20px;
+        padding: 15px;
+        background-color: #f0f0f0;
+        border-radius: 8px;
+    }
+
+    .search-input {
+        flex: 1;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 14px;
+    }
+
+    .filter-select {
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 14px;
+        background-color: white;
+    }
+
+    .btn-primary {
+        background-color: #3F0216; /* Mismo color que los títulos de tabla */
+        color: white;
+        border: none;
+        border-radius: 5px;
+        padding: 10px 20px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        font-size: 14px;
+    }
+
+    .btn-primary:hover {
+        background-color: #5F0216;
+    }
+
+    .btn-secondary {
+        background-color: #3F0216;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        padding: 10px 20px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        font-size: 14px;
+    }
+
+    .btn-secondary:hover {
+        background-color: #5F0216;
+    }
+
+    .btn-danger {
+        background: none;
+        color: #dc3545;
+        border: none;
+        padding: 8px;
+        cursor: pointer;
+        transition: color 0.3s ease;
+        font-size: 16px;
+    }
+
+    .btn-danger:hover {
+        color: #c82333;
+        background-color: rgba(220, 53, 69, 0.1);
+        border-radius: 4px;
+    }
+
+    .btn-success {
+        background: none;
+        color: #28a745;
+        border: none;
+        padding: 8px;
+        cursor: pointer;
+        transition: color 0.3s ease;
+        font-size: 16px;
+    }
+
+    .btn-success:hover {
+        color: #218838;
+        background-color: rgba(40, 167, 69, 0.1);
+        border-radius: 4px;
+    }
+
+    /* Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        animation: fadeIn 0.3s ease;
+    }
+
+    .modal.show {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .modal-content {
+        background-color: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        max-width: 600px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+        animation: slideIn 0.3s ease;
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px 30px;
+        border-bottom: 1px solid #eee;
+        background-color: #3F0216;
+        color: white;
+        border-radius: 15px 15px 0 0;
+    }
+
+    .modal-header h2 {
+        margin: 0;
+        font-size: 24px;
+    }
+
+    .close {
+        color: white;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: color 0.3s ease;
+    }
+
+    .close:hover {
+        color: #ff6b6b;
+    }
+
+    .modal-body {
+        padding: 30px;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 8px;
+        color: #333;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 12px;
+        font-size: 14px;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        transition: border-color 0.3s ease;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: #3F0216;
+    }
+
+    .form-group.full-width {
+        grid-column: 1 / -1;
+    }
+
+    .modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 15px;
+        padding: 20px 30px;
+        border-top: 1px solid #eee;
+        background-color: #f9f9f9;
+        border-radius: 0 0 15px 15px;
+    }
+
+    /* Table Styles */
+    .table-container {
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        overflow: visible;
+    }
+
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 0;
+    }
+
+    .table th {
+        background-color: #3F0216;
+        color: white;
+        padding: 15px 12px;
+        text-align: center;
+        font-weight: bold;
+        border: none;
+    }
+
+    .table td {
+        padding: 12px;
+        text-align: center;
+        border-bottom: 1px solid #eee;
+        vertical-align: middle;
+    }
+
+    .table tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 5px;
+        justify-content: center;
+    }
+
+    .no-data {
+        text-align: center;
+        padding: 40px;
+        color: #666;
+        font-style: italic;
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @keyframes slideIn {
+        from { 
+            opacity: 0;
+            transform: translateY(-50px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Pagination Styles */
+    .pagination-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px;
+        background-color: #f9f9f9;
+        border-top: 1px solid #eee;
+        border-radius: 0 0 10px 10px;
+    }
+
+    .pagination-info {
+        color: #666;
+        font-size: 14px;
+    }
+
+    .pagination-controls {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .per-page-selector {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .per-page-selector label {
+        font-size: 14px;
+        color: #666;
+        margin: 0;
+    }
+
+    .per-page-selector select {
+        padding: 5px 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 14px;
+        background-color: white;
+    }
+
+    .pagination-links {
+        display: flex;
+        gap: 5px;
+    }
+
+    .pagination-links a,
+    .pagination-links span {
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        text-decoration: none;
+        color: #3F0216;
+        font-size: 14px;
+        transition: all 0.3s ease;
+    }
+
+    .pagination-links a:hover {
+        background-color: #3F0216;
+        color: white;
+        border-color: #3F0216;
+    }
+
+    .pagination-links .current {
+        background-color: #3F0216;
+        color: white;
+        border-color: #3F0216;
+    }
+
+    .pagination-links .disabled {
+        color: #ccc;
+        cursor: not-allowed;
+        background-color: #f5f5f5;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .search-filter-section {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .modal-content {
+            width: 95%;
+            margin: 10px;
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+
+        .pagination-container {
+            flex-direction: column;
+            gap: 15px;
+            text-align: center;
+        }
+
+        .pagination-controls {
+            flex-direction: column;
+            gap: 10px;
+        }
+    }
+</style>
+
+<div class="main-container">
+    <!-- Header Section -->
+    <div class="header-section">
+        <h1>👥 Gestión de Clientes</h1>
+        <button class="btn-primary" onclick="openModal()">
+            ➕ Nuevo Cliente
+        </button>
+    </div>
+
+    <!-- Search and Filter Section -->
+    <div class="search-filter-section">
+        <input type="text" class="search-input" id="searchInput" placeholder="🔍 Buscar por nombre, documento o teléfono..." onkeyup="filterTable()">
+        <select class="filter-select" id="tipoFilter" onchange="filterTable()">
+            <option value="">Todos los tipos</option>
+            <option value="cc">Cédula de Ciudadanía</option>
+            <option value="nit">NIT</option>
+            <option value="ce">Cédula de Extranjería</option>
+            <option value="pas">Pasaporte</option>
+            <option value="sin">Sin Documento</option>
+        </select>
+        <select class="filter-select" id="orderBySelect" onchange="changeOrderBy(this.value)">
+            <option value="nombre" {% if order_by == 'nombre' %}selected{% endif %}>Ordenar por Nombre</option>
+            <option value="documento" {% if order_by == 'documento' %}selected{% endif %}>Ordenar por Documento</option>
+        </select>
+    </div>
+
+    <!-- Table Container -->
+    <div class="table-container">
+        <table class="table" id="clientesTable">
+            <thead>
+                <tr>
+                    <th>Tipo Doc.</th>
+                    <th>Documento</th>
+                    <th>Nombre</th>
+                    <th>Teléfono</th>
+                    <th>Email</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cliente in clientes %}
+                <tr data-tipo="{{ cliente.tipo_documento|lower }}" data-documento="{{ cliente.documento|lower }}" data-nombre="{{ cliente.nombre|lower }}" data-telefono="{{ cliente.telefono|lower }}">
+                    <td>{{ cliente.get_tipo_documento_display }}</td>
+                    <td><strong>{{ cliente.documento|default:"Sin documento" }}</strong></td>
+                    <td>{{ cliente.nombre }}</td>
+                    <td>{{ cliente.telefono|default:"Sin teléfono" }}</td>
+                    <td>{{ cliente.email|default:"Sin email" }}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn-success" onclick="editCliente({{ cliente.id }})" title="Editar">
+                                ✏️
+                            </button>
+                            <button class="btn-danger" onclick="deleteCliente({{ cliente.id }}, '{{ cliente.nombre }}')" title="Eliminar">
+                                🗑️
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="no-data">
+                        📝 No hay clientes registrados aún. ¡Crea tu primer cliente!
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination Section -->
+    <div class="pagination-container">
+        <div class="pagination-info">
+            Mostrando {{ clientes.start_index }} a {{ clientes.end_index }} de {{ clientes.paginator.count }} clientes
+        </div>
+        
+        <div class="pagination-controls">
+            <div class="per-page-selector">
+                <label for="perPageSelect">Mostrar:</label>
+                <select id="perPageSelect" onchange="changePerPage(this.value)">
+                    <option value="5" {% if per_page == '5' %}selected{% endif %}>5</option>
+                    <option value="10" {% if per_page == '10' %}selected{% endif %}>10</option>
+                    <option value="50" {% if per_page == '50' %}selected{% endif %}>50</option>
+                </select>
+            </div>
+            
+            {% if clientes.has_other_pages %}
+            <div class="pagination-links">
+                {% if clientes.has_previous %}
+                    <a href="?page=1&per_page={{ per_page }}&order_by={{ order_by }}">««</a>
+                    <a href="?page={{ clientes.previous_page_number }}&per_page={{ per_page }}&order_by={{ order_by }}">«</a>
+                {% else %}
+                    <span class="disabled">««</span>
+                    <span class="disabled">«</span>
+                {% endif %}
+
+                {% for num in clientes.paginator.page_range %}
+                    {% if clientes.number == num %}
+                        <span class="current">{{ num }}</span>
+                    {% elif num > clientes.number|add:'-3' and num < clientes.number|add:'3' %}
+                        <a href="?page={{ num }}&per_page={{ per_page }}&order_by={{ order_by }}">{{ num }}</a>
+                    {% endif %}
+                {% endfor %}
+
+                {% if clientes.has_next %}
+                    <a href="?page={{ clientes.next_page_number }}&per_page={{ per_page }}&order_by={{ order_by }}">»</a>
+                    <a href="?page={{ clientes.paginator.num_pages }}&per_page={{ per_page }}&order_by={{ order_by }}">»»</a>
+                {% else %}
+                    <span class="disabled">»</span>
+                    <span class="disabled">»»</span>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal para crear/editar cliente -->
+<div id="clienteModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modalTitle">➕ Nuevo Cliente</h2>
+            <span class="close" onclick="closeModal()">&times;</span>
+        </div>
+        
+        <form method="POST" id="clienteForm">
+            {% csrf_token %}
+            <input type="hidden" id="clienteId" name="cliente_id" value="">
+            <input type="hidden" id="formAction" name="action" value="">
+            
+            <div class="modal-body">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="tipo_documento">Tipo de Documento</label>
+                        <select id="tipo_documento" name="tipo_documento" onchange="toggleDocumentoField()">
+                            <option value="CC">Cédula de Ciudadanía</option>
+                            <option value="NIT">NIT</option>
+                            <option value="CE">Cédula de Extranjería</option>
+                            <option value="PAS">Pasaporte</option>
+                            <option value="SIN">Sin Documento</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="documentoGroup">
+                        <label for="documento">Documento (opcional)</label>
+                        <input type="text" id="documento" name="documento" placeholder="Ej: 12345678">
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="nombre">Nombre Completo *</label>
+                        <input type="text" id="nombre" name="nombre" placeholder="Ej: Juan Pérez" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="telefono">Teléfono</label>
+                        <input type="tel" id="telefono" name="telefono" placeholder="Ej: 3001234567">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" placeholder="Ej: juan@email.com">
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="direccion">Dirección</label>
+                        <textarea id="direccion" name="direccion" rows="3" placeholder="Ej: Calle 123 #45-67, Bogotá"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="closeModal()">Cancelar</button>
+                <button type="submit" class="btn-primary">💾 Guardar Cliente</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Modal functions
+    function openModal(clienteId = null) {
+        const modal = document.getElementById('clienteModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const form = document.getElementById('clienteForm');
+        
+        if (clienteId) {
+            modalTitle.textContent = '✏️ Editar Cliente';
+            // Don't reset form when editing - data will be loaded by editCliente function
+        } else {
+            modalTitle.textContent = '➕ Nuevo Cliente';
+            // Reset form only when creating new cliente
+            form.reset();
+            document.getElementById('formAction').value = '';
+            document.getElementById('clienteId').value = '';
+            toggleDocumentoField(); // Reset documento field visibility
+        }
+        
+        modal.classList.add('show');
+    }
+    
+    function closeModal() {
+        const modal = document.getElementById('clienteModal');
+        modal.classList.remove('show');
+    }
+    
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        const modal = document.getElementById('clienteModal');
+        if (event.target === modal) {
+            closeModal();
+        }
+    }
+    
+    // Toggle documento field based on tipo_documento
+    function toggleDocumentoField() {
+        const tipoDocumento = document.getElementById('tipo_documento').value;
+        const documentoGroup = document.getElementById('documentoGroup');
+        const documentoInput = document.getElementById('documento');
+        
+        if (tipoDocumento === 'SIN') {
+            documentoGroup.style.display = 'none';
+            documentoInput.value = '';
+        } else {
+            documentoGroup.style.display = 'block';
+        }
+    }
+    
+    // Filter table function
+    function filterTable() {
+        const searchInput = document.getElementById('searchInput').value.toLowerCase();
+        const tipoFilter = document.getElementById('tipoFilter').value.toLowerCase();
+        const table = document.getElementById('clientesTable');
+        const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+
+        for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
+            const tipo = row.getAttribute('data-tipo') || '';
+            const documento = row.getAttribute('data-documento') || '';
+            const nombre = row.getAttribute('data-nombre') || '';
+            const telefono = row.getAttribute('data-telefono') || '';
+
+            const matchesSearch = documento.includes(searchInput) || 
+                                nombre.includes(searchInput) || 
+                                telefono.includes(searchInput);
+            
+            const matchesTipo = !tipoFilter || tipo.includes(tipoFilter);
+
+            if (matchesSearch && matchesTipo) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        }
+    }
+    
+    // Edit cliente function
+    function editCliente(clienteId) {
+        // Set form action to edit
+        document.getElementById('formAction').value = 'editar_cliente';
+        document.getElementById('clienteId').value = clienteId;
+        
+        // Fetch cliente data via AJAX
+        fetch(`/clientes/data/${clienteId}/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert('Error: ' + data.error);
+                    return;
+                }
+                
+                // Load data into form fields
+                document.getElementById('tipo_documento').value = data.tipo_documento || 'CC';
+                document.getElementById('documento').value = data.documento || '';
+                document.getElementById('nombre').value = data.nombre || '';
+                document.getElementById('telefono').value = data.telefono || '';
+                document.getElementById('email').value = data.email || '';
+                document.getElementById('direccion').value = data.direccion || '';
+                
+                // Toggle documento field visibility
+                toggleDocumentoField();
+                
+                // Open modal for editing
+                openModal(clienteId);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al cargar los datos del cliente');
+            });
+    }
+    
+    // Delete cliente function
+    function deleteCliente(clienteId, clienteName) {
+        if (confirm(`¿Estás seguro de que quieres eliminar el cliente "${clienteName}"?`)) {
+            // Create a form to submit the delete action
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.style.display = 'none';
+            
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrfmiddlewaretoken';
+            csrfInput.value = csrfToken;
+            
+            const actionInput = document.createElement('input');
+            actionInput.type = 'hidden';
+            actionInput.name = 'action';
+            actionInput.value = 'eliminar_cliente';
+            
+            const clienteIdInput = document.createElement('input');
+            clienteIdInput.type = 'hidden';
+            clienteIdInput.name = 'cliente_id';
+            clienteIdInput.value = clienteId;
+            
+            form.appendChild(csrfInput);
+            form.appendChild(actionInput);
+            form.appendChild(clienteIdInput);
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+    
+    // Change per page function
+    function changePerPage(perPage) {
+        const url = new URL(window.location);
+        url.searchParams.set('per_page', perPage);
+        url.searchParams.set('page', '1'); // Reset to first page
+        window.location.href = url.toString();
+    }
+    
+    // Change order by function
+    function changeOrderBy(orderBy) {
+        const url = new URL(window.location);
+        url.searchParams.set('order_by', orderBy);
+        url.searchParams.set('page', '1'); // Reset to first page
+        window.location.href = url.toString();
+    }
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(event) {
+        // ESC key to close modal
+        if (event.key === 'Escape') {
+            closeModal();
+        }
+        
+        // Ctrl+N to create new cliente
+        if (event.ctrlKey && event.key === 'n') {
+            event.preventDefault();
+            openModal();
+        }
+    });
+</script>
+{% endblock %}
