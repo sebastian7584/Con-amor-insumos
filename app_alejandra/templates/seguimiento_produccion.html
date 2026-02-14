@@ -679,7 +679,7 @@
             </div>
 
             <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                <a href="{% url 'orden_fabricante' produccion.id %}" target="_blank" class="btn-info" style="text-decoration: none; display: inline-block;">
+                <a href="{% url 'orden_fabricante' produccion.id %}" class="btn-info" style="text-decoration: none; display: inline-block;">
                     📄 Vista para fabricante (PDF)
                 </a>
                 {% if produccion.estado != 'Terminado' %}
