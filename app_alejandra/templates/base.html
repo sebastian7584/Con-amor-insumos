@@ -100,16 +100,14 @@
 <body>
     <!-- Barra superior -->
     <div class="navbar">
-        <!-- Botón menú lateral (fallback si la imagen no carga, p. ej. en servidor) -->
-        <button id="menu-button" style="border: none; background: none; padding: 0; cursor: pointer; font-size: 28px; line-height: 1; color: white;" title="Menú">
-            <img src="{% static 'images/menu_icon.png' %}" alt="Menú" style="display: block;" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
-            <span style="display: none;">☰</span>
+        <!-- Botón menú lateral -->
+        <button id="menu-button" style="border: none; background: none; padding: 0; cursor: pointer;">
+            <img src="{% static 'images/menu_icon.png' %}" alt="menu">
         </button>
 
-        <!-- Logo central (fallback si la imagen no carga) -->
+        <!-- Logo central -->
         <div class="logo-center">
-            <img src="{% static 'images/logo.png' %}" alt="Logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
-            <span style="display: none; color: white; font-weight: bold; font-size: 1.2rem;">Logo</span>
+            <img src="{% static 'images/logo.png' %}" alt="logo">
         </div>
 
         <!-- Botón de salir -->
