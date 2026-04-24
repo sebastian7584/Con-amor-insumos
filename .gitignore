@@ -1,6 +1,12 @@
-.venvprojale
+venvprojale/
+venv/
 /imagenes/
 __pycache__/
 *.pyc
+*.pyo
 .env
-venv/
+staticfiles/
+db.sqlite3
+media/
+navbar_preview.html
+.claude/
