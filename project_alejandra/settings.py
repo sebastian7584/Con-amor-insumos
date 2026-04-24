@@ -24,9 +24,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-da0@8cihsfh2=6zt1050#5pp0d*@e*br59gkgu2*&mfycwx5xs'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = ['178.128.78.100', '127.0.0.1']
+ALLOWED_HOSTS = ['178.128.78.100', '127.0.0.1', 'localhost', 'conamor.dashsm.com']
+
 
 
 # Application definition
@@ -89,8 +90,8 @@ DATABASES = {
         'NAME': config('DB_NAME'),
         'USER': 'myprojectuser',
         'PASSWORD': config('DB_PASSWORD'),
-        'HOST': 'localhost',
-        'PORT': '',
+        'HOST': config('DB_HOST', default='localhost'),
+        'PORT': config('DB_PORT', default='5432'),
     }
 }
 
