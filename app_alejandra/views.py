@@ -2337,9 +2337,14 @@ def _import_insumos(reader, created_count, updated_count, errors, deleted_count=
                 obj.referencia = referencia or None
                 obj.nombre = nombre
                 obj.medida = medida
+                if referencia:
+                    conflicto = Insumo2.objects.filter(referencia=referencia).exclude(pk=obj.pk).first()
+                    if conflicto:
+                        errors.append(f"Fila {i}: la referencia '{referencia}' ya está en uso por el insumo ID {conflicto.pk} ({conflicto.nombre})")
+                        continue
                 obj.save()
-                if colores is not None:
-                    obj.colores.set(colores)
+                if colores:
+                    obj.colores.add(*colores)
                 updated_count[0] += 1
             else:
                 obj = Insumo2.objects.create(
@@ -2348,7 +2353,7 @@ def _import_insumos(reader, created_count, updated_count, errors, deleted_count=
                     medida=medida,
                 )
                 if colores:
-                    obj.colores.set(colores)
+                    obj.colores.add(*colores)
                 created_count[0] += 1
         except Exception as e:
             errors.append(f"Fila {i}: {str(e)}")
