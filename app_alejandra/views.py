@@ -2331,7 +2331,7 @@ def _import_insumos(reader, created_count, updated_count, errors, deleted_count=
                 obj = Insumo2.objects.filter(id=int(row_id)).first()
             if not obj and referencia:
                 obj = Insumo2.objects.filter(referencia=referencia).first()
-            if not obj:
+            if not obj and not referencia:
                 obj = Insumo2.objects.filter(nombre=nombre).first()
             if obj:
                 obj.referencia = referencia or None
